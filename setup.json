@@ -31,6 +31,11 @@
             "cmd": "help"
         },
         {
+            "name": "sleep",
+            "profile": "git-bash",
+            "cmd": "sleep 105"
+        },
+        {
             "name": "release",
             "profile": "git-bash",
             "cmd": "./scripts/release.sh"

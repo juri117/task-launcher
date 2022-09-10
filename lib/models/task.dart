@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 
 class Tasks {
@@ -44,7 +45,40 @@ class Task {
   String stout = "";
   Process? process;
   double scrollOffset = -1.0;
+  DateTime? startTime;
+  DateTime? stopTime;
   Task(this.id, this.name, this.cmd, this.params, this.profile);
+  void start() {
+    startTime = DateTime.now();
+    stopTime = null;
+  }
+
+  void finished() {
+    process = null;
+    stopTime = DateTime.now();
+  }
+
+  String getStartTime() {
+    if (startTime != null) {
+      return formatTime(
+          startTime?.hour ?? 0, startTime?.minute ?? 0, startTime?.second ?? 0);
+    }
+    return "-";
+  }
+
+  String getRunntime() {
+    if (startTime != null && stopTime != null) {
+      var diff = stopTime?.difference(startTime ?? DateTime.now());
+      if (diff != null) {
+        return diff.toString().split('.').first;
+      }
+    }
+    return "-";
+  }
+
+  String formatTime(int hours, int min, int sec) {
+    return "$hours:${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}";
+  }
 }
 
-enum TaskState { idle, running, finished, aborted }
+enum TaskState { idle, running, finished, aborted, failed }

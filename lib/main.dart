@@ -36,7 +36,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final ScrollController _scrollController = ScrollController();
   final MultiSplitViewController _splitViewController =
-      MultiSplitViewController(areas: Area.weights([0.3, 0.7]));
+      MultiSplitViewController(areas: Area.weights([0.4, 0.6]));
 
   Tasks tasks = Tasks([], {});
   Task selectedTask = Task(0, "loading...", ".", [], "");
@@ -69,6 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _runTask(Task task) async {
     _selectTask(task);
+    task.start();
     _taskChangeState(task, TaskState.running);
     _appendOutputToTask(task,
         "\n*${'=' * 40}*\n*running command: ${task.cmd} ${task.params.join(" ")}*\n*${'-' * 40}*\n");
@@ -101,10 +102,10 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       }
     } catch (e) {
-      _taskChangeState(task, TaskState.aborted);
+      _taskChangeState(task, TaskState.failed);
       _appendOutputToTask(task, "$e\n");
     }
-    task.process = null;
+    task.finished();
   }
 
   void _taskChangeState(Task task, TaskState newState) {
@@ -132,7 +133,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _appendOutputToTask(
           task, "\n*${'-' * 40}*\n*task was aborted by user*\n");
     }
-    task.process = null;
+    task.finished();
   }
 
   Future<void> _clearOutput(Task task) async {
@@ -237,17 +238,27 @@ class _MyHomePageState extends State<MyHomePage> {
                 ? const SizedBox(
                     height: 30, width: 30, child: CircularProgressIndicator())
                 : (task.state == TaskState.finished)
-                    ? const Icon(Icons.done)
+                    ? const Icon(Icons.done,
+                        color: Color.fromARGB(255, 0, 153, 8))
                     : (task.state == TaskState.aborted)
-                        ? const Icon(Icons.dangerous)
-                        : const Icon(Icons.device_unknown)
+                        ? const Icon(Icons.cancel_outlined)
+                        : (task.state == TaskState.failed)
+                            ? const Icon(Icons.error_outline,
+                                color: Color.fromARGB(255, 221, 15, 0))
+                            : const Text(" ")
           ])),
-      subtitle: Text(task.cmd),
+      subtitle: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("started at: ${task.getStartTime()}"),
+          Text("it took: ${task.getRunntime()}"),
+        ],
+      ),
       onTap: () => _selectTask(task),
       tileColor: task.id == selectedTask.id
           ? Theme.of(context).backgroundColor
           : Theme.of(context).canvasColor,
-      //children: [Text("params here...")]
     );
   }
 }

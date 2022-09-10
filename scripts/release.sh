@@ -19,9 +19,8 @@ flutter build windows
 echo "copy release files"
 mkdir release/task-launcher-win-$VERSION
 cp build/windows/runner/Release/* release/task-launcher-win-$VERSION/ -r
-#cp README.md release/task-launcher-win-$VERSION/
-#cp ReleaseNotes.md release/task-launcher-win-$VERSION/
-#cp scripts/data/run.sh release/task-launcher-win-$VERSION/
+cp README.md release/task-launcher-win-$VERSION/
+cp ReleaseNotes.md release/task-launcher-win-$VERSION/
 
 
 echo "zip release files"
