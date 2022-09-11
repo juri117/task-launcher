@@ -3,7 +3,7 @@ import 'dart:io';
 
 class Tasks {
   final List<Task> tasks;
-  final Map<String, String> profiles;
+  final Map<String, Profile> profiles;
   Tasks(this.tasks, this.profiles);
 
   factory Tasks.fromJson(Map<String, dynamic> data) {
@@ -23,11 +23,16 @@ class Tasks {
       out.add(Task(id, task['name'], task['cmd'], params, profile));
       id++;
     }
-    Map<String, String> profiles = {};
+    Map<String, Profile> profiles = {};
     if (data.containsKey("profiles")) {
       for (var prof in data["profiles"]) {
         if (prof.containsKey("name") && prof.containsKey("executable")) {
-          profiles[prof["name"]] = prof["executable"];
+          List<String> setup = [];
+          if (prof.containsKey("setup")) {
+            setup = List<String>.from(prof['setup']);
+          }
+          profiles[prof["name"]] =
+              Profile(prof["name"], prof["executable"], setup);
         }
       }
     }
@@ -82,3 +87,10 @@ class Task {
 }
 
 enum TaskState { idle, running, finished, aborted, failed }
+
+class Profile {
+  final String name;
+  final String executable;
+  final List<String> setup;
+  Profile(this.name, this.executable, this.setup);
+}

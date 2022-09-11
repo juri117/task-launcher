@@ -80,8 +80,11 @@ class _MyHomePageState extends State<MyHomePage> {
               task, "*ERROR: profile ${task.profile} is not defined*\n");
           return;
         }
-        var terminal = tasks.profiles[task.profile];
-        task.process = await Process.start("\"$terminal\"", []);
+        var profile = tasks.profiles[task.profile];
+        task.process = await Process.start("\"${profile?.executable}\"", []);
+        for (var setupRow in profile?.setup ?? []) {
+          task.process?.stdin.writeln(setupRow);
+        }
         task.process?.stdin
             .writeln("${task.cmd} ${task.params.join(" ")} && exit");
       } else {

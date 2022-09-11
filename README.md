@@ -8,12 +8,15 @@ A graphical task launcher written in flutter, setup via json file, support for d
 ## example
 
 place a `setup.json` file next to the executable with e.g.
-```
+```json
 {
     "profiles": [
         {
             "name": "git-bash",
-            "executable": "C:/Program Files/Git/bin/bash.exe"
+            "executable": "C:/Program Files/Git/bin/bash.exe",
+            "setup": [
+                "export LANG=C.UTF-8"
+            ]
         }
     ],
     "tasks": [
@@ -40,6 +43,11 @@ place a `setup.json` file next to the executable with e.g.
         {
             "name": "test help",
             "cmd": "help"
+        },
+        {
+            "name": "sleep",
+            "profile": "git-bash",
+            "cmd": "sleep 105"
         },
         {
             "name": "release",

@@ -2,7 +2,10 @@
     "profiles": [
         {
             "name": "git-bash",
-            "executable": "C:/Program Files/Git/bin/bash.exe"
+            "executable": "C:/Program Files/Git/bin/bash.exe",
+            "setup": [
+                "export LANG=C.UTF-8"
+            ]
         }
     ],
     "tasks": [
