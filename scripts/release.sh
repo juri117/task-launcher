@@ -21,6 +21,7 @@ mkdir release/task-launcher-win-$VERSION
 cp build/windows/runner/Release/* release/task-launcher-win-$VERSION/ -r
 cp README.md release/task-launcher-win-$VERSION/
 cp ReleaseNotes.md release/task-launcher-win-$VERSION/
+cp setup.json release/task-launcher-win-$VERSION/
 
 
 echo "zip release files"

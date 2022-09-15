@@ -2,7 +2,7 @@
 
 ## 0.00.002
 
-* add start and runntime info to tasklist
+* add start and runtime info to tasklist
 * add failed state (exclamation mark)
 * add colors to state icons
 * add setup steps for custom profiles
