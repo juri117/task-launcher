@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:io';
 
 class Tasks {
@@ -20,7 +19,11 @@ class Tasks {
       if (task.containsKey("profile")) {
         profile = task['profile'];
       }
-      out.add(Task(id, task['name'], task['cmd'], params, profile));
+      String? workingDir;
+      if (task.containsKey("workingDirectory")) {
+        workingDir = task['workingDirectory'];
+      }
+      out.add(Task(id, task['name'], task['cmd'], params, profile, workingDir));
       id++;
     }
     Map<String, Profile> profiles = {};
@@ -46,13 +49,15 @@ class Task {
   final String cmd;
   final List<String> params;
   final String profile;
+  final String? workingDir;
   TaskState state = TaskState.idle;
   String stout = "";
   Process? process;
   double scrollOffset = -1.0;
   DateTime? startTime;
   DateTime? stopTime;
-  Task(this.id, this.name, this.cmd, this.params, this.profile);
+  Task(
+      this.id, this.name, this.cmd, this.params, this.profile, this.workingDir);
   void start() {
     startTime = DateTime.now();
     stopTime = null;

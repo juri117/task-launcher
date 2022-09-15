@@ -39,6 +39,22 @@
             "cmd": "sleep 105"
         },
         {
+            "name": "python test",
+            "cmd": "python",
+            "workingDirectory": "./scripts",
+            "params": [
+                "test.py"
+            ]
+        },
+        {
+            "name": "python test error",
+            "cmd": "python",
+            "workingDirectory": "./scripts",
+            "params": [
+                "test_error.py"
+            ]
+        },
+        {
             "name": "release",
             "profile": "git-bash",
             "cmd": "./scripts/release.sh"

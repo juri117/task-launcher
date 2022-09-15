@@ -1,3 +1,6 @@
+// ignore_for_file: argument_type_not_assignable_to_error_handler
+
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -39,7 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
       MultiSplitViewController(areas: Area.weights([0.4, 0.6]));
 
   Tasks tasks = Tasks([], {});
-  Task selectedTask = Task(0, "loading...", ".", [], "");
+  Task selectedTask = Task(0, "loading...", ".", [], "", null);
 
   @override
   void initState() {
@@ -81,31 +84,55 @@ class _MyHomePageState extends State<MyHomePage> {
           return;
         }
         var profile = tasks.profiles[task.profile];
-        task.process = await Process.start("\"${profile?.executable}\"", []);
+        task.process = await Process.start("\"${profile?.executable}\"", [],
+            workingDirectory: task.workingDir, mode: ProcessStartMode.normal);
         for (var setupRow in profile?.setup ?? []) {
           task.process?.stdin.writeln(setupRow);
         }
         task.process?.stdin
             .writeln("${task.cmd} ${task.params.join(" ")} && exit");
       } else {
-        task.process = await Process.start(task.cmd, task.params);
+        task.process = await Process.start(task.cmd, task.params,
+            workingDirectory: task.workingDir, mode: ProcessStartMode.normal);
       }
-      var lines = task.process?.stdout.transform(utf8.decoder);
-      if (lines == null) {
-        _taskChangeState(task, TaskState.aborted);
-      } else {
-        await lines.forEach((element) {
-          _appendOutputToTask(task, element);
-          if (task.process == null) {
-            return;
-          }
-        });
-        if (task.process != null) {
+      final Completer<int?> completer = Completer<int?>();
+
+      task.process?.stdout.listen((event) {
+        var test = const Utf8Decoder().convert(event);
+        _appendOutputToTask(task, test);
+      }, onDone: () async {
+        completer.complete(await task.process?.exitCode);
+      }, onError: (error, stack) {
+        //print("error: $error, $stack");
+        _appendOutputToTask(task, "error: $error");
+      }, cancelOnError: false);
+
+      task.process?.stderr.listen(
+          (event) {
+            var test = const Utf8Decoder().convert(event);
+            _appendOutputToTask(task, test);
+          },
+          onDone: () async {},
+          onError: (error, stack) {
+            //print("stderr error: $error, $stack");
+            _appendOutputToTask(task, "error: $error");
+          },
+          cancelOnError: false);
+
+      final int? exitCode = await completer.future;
+      _appendOutputToTask(task, "*exit code: $exitCode*\n");
+      if (task.state != TaskState.aborted) {
+        if (exitCode == null) {
+          _taskChangeState(task, TaskState.failed);
+        } else if (exitCode != 0) {
+          _taskChangeState(task, TaskState.failed);
+        } else {
           _taskChangeState(task, TaskState.finished);
         }
       }
     } catch (e) {
       _taskChangeState(task, TaskState.failed);
+      _appendOutputToTask(task, "*failed to launch the task, reason:*\n");
       _appendOutputToTask(task, "$e\n");
     }
     task.finished();
@@ -131,7 +158,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _killTask(Task task) async {
     var pid = task.process?.pid;
     if (pid != null) {
-      Process.killPid(pid);
+      task.process?.kill(ProcessSignal.sigint);
+      //Process.killPid(pid);
       _taskChangeState(task, TaskState.aborted);
       _appendOutputToTask(
           task, "\n*${'-' * 40}*\n*task was aborted by user*\n");
