@@ -9,6 +9,8 @@ import 'package:multi_split_view/multi_split_view.dart';
 import 'package:rich_text_view/rich_text_view.dart';
 import 'package:task_launcher/models/task.dart';
 
+const int maxTerminalChars = 10000;
+
 void main() {
   runApp(const MyApp());
 }
@@ -148,10 +150,18 @@ class _MyHomePageState extends State<MyHomePage> {
     if (task.id == selectedTask.id) {
       setState(() {
         task.stout += out;
+        if (task.stout.length > maxTerminalChars) {
+          task.stout.substring(
+              task.stout.length - maxTerminalChars, task.stout.length);
+        }
       });
       _scrollDown();
     } else {
       task.stout += out;
+      if (task.stout.length > maxTerminalChars) {
+        task.stout
+            .substring(task.stout.length - maxTerminalChars, task.stout.length);
+      }
     }
   }
 
