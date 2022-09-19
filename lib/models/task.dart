@@ -54,6 +54,7 @@ class Task {
   String stout = "";
   Process? process;
   double scrollOffset = -1.0;
+  bool autoScroll = true;
   DateTime? startTime;
   DateTime? stopTime;
   Task(

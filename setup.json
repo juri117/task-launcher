@@ -55,6 +55,14 @@
             ]
         },
         {
+            "name": "python test big text",
+            "cmd": "python",
+            "workingDirectory": "./scripts",
+            "params": [
+                "big_text.py"
+            ]
+        },
+        {
             "name": "release",
             "profile": "git-bash",
             "cmd": "./scripts/release.sh"

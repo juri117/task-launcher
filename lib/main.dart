@@ -5,11 +5,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:rich_text_view/rich_text_view.dart';
 import 'package:task_launcher/models/task.dart';
 
-const int maxTerminalChars = 10000;
+const int maxTerminalChars = 50000;
+const int maxTerminalCharsTrimThreshold = 5000;
 
 void main() {
   runApp(const MyApp());
@@ -46,6 +49,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Tasks tasks = Tasks([], {});
   Task selectedTask = Task(0, "loading...", ".", [], "", null);
 
+  bool _autoScroll = true;
+
   @override
   void initState() {
     super.initState();
@@ -65,11 +70,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _scrollDown() async {
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent + 2000,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.ease,
-    );
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent
+        //,
+        //duration: const Duration(milliseconds: 500),
+        //curve: Curves.ease,
+        );
   }
 
   Future<void> _runTask(Task task) async {
@@ -150,16 +155,20 @@ class _MyHomePageState extends State<MyHomePage> {
     if (task.id == selectedTask.id) {
       setState(() {
         task.stout += out;
-        if (task.stout.length > maxTerminalChars) {
-          task.stout.substring(
+        if (task.stout.length >
+            maxTerminalChars + maxTerminalCharsTrimThreshold) {
+          print("cleanup: ${task.stout.length}");
+          task.stout = task.stout.substring(
               task.stout.length - maxTerminalChars, task.stout.length);
         }
       });
-      _scrollDown();
+      if (_autoScroll) _scrollDown();
     } else {
       task.stout += out;
-      if (task.stout.length > maxTerminalChars) {
-        task.stout
+      if (task.stout.length >
+          maxTerminalChars + maxTerminalCharsTrimThreshold) {
+        print("cleanup2");
+        task.stout = task.stout
             .substring(task.stout.length - maxTerminalChars, task.stout.length);
       }
     }
@@ -181,17 +190,28 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       task.stout = "";
     });
+    _scrollController.jumpTo(0.0);
+  }
+
+  void _copyToClipboard(Task task) async {
+    Clipboard.setData(ClipboardData(text: task.stout));
   }
 
   Future<void> _selectTask(Task task) async {
     selectedTask.scrollOffset = _scrollController.offset;
+    selectedTask.autoScroll = _autoScroll;
     setState(() {
       selectedTask = task;
     });
-    if (task.scrollOffset < 0.0) {
-      _scrollController.jumpTo(0.0);
+    _autoScroll = task.autoScroll;
+    if (task.autoScroll) {
+      _scrollDown();
     } else {
-      _scrollController.jumpTo(task.scrollOffset);
+      if (task.scrollOffset < 0.0) {
+        _scrollController.jumpTo(0.0);
+      } else {
+        _scrollController.jumpTo(task.scrollOffset);
+      }
     }
   }
 
@@ -205,22 +225,39 @@ class _MyHomePageState extends State<MyHomePage> {
         return _buildList(tasks.tasks[index]);
       },
     );
-    Widget right = Scrollbar(
-        controller: _scrollController,
-        thumbVisibility: true,
-        child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
+    Widget right = NotificationListener<ScrollNotification>(
+        onNotification: (scrollNotification) {
+          print('inside the onNotification');
+          if (_scrollController.position.userScrollDirection ==
+              ScrollDirection.reverse) {
+            print('scrolled down');
+            _autoScroll = false;
+            //the setState function
+          } else if (_scrollController.position.userScrollDirection ==
+              ScrollDirection.forward) {
+            print('scrolled up');
+            _autoScroll = false;
+            //setState function
+          }
+          return true;
+        },
+        child: Scrollbar(
             controller: _scrollController,
-            child: RichTextView(
-              style: const TextStyle(fontFamily: "myMono", color: Colors.black),
-              selectable: true,
-              text: selectedTask.stout,
-              linkStyle: const TextStyle(color: Colors.blue),
-              truncate: false,
-              supportedTypes: const [ParsedType.URL, ParsedType.BOLD],
-              boldStyle:
-                  const TextStyle(fontFamily: "myMono", color: Colors.purple),
-            )));
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                controller: _scrollController,
+                child: RichTextView(
+                  style: const TextStyle(
+                      fontFamily: "myMono", color: Colors.black),
+                  selectable: true,
+                  text: selectedTask.stout,
+                  linkStyle: const TextStyle(color: Colors.blue),
+                  truncate: false,
+                  supportedTypes: const [ParsedType.URL, ParsedType.BOLD],
+                  boldStyle: const TextStyle(
+                      fontFamily: "myMono", color: Colors.purple),
+                ))));
 
     MultiSplitView multiSplitView = MultiSplitView(
         controller: _splitViewController,
@@ -245,13 +282,37 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: theme,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _clearOutput(selectedTask);
-        },
-        backgroundColor: Colors.grey,
-        child: const Icon(Icons.delete_outline_outlined),
-      ),
+      floatingActionButton:
+          Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+        FloatingActionButton(
+          onPressed: () {
+            _copyToClipboard(selectedTask);
+          },
+          backgroundColor: Colors.grey,
+          child: const Icon(Icons.copy),
+        ),
+        const SizedBox(
+          height: 10,
+        ),
+        FloatingActionButton(
+          onPressed: () {
+            _clearOutput(selectedTask);
+          },
+          backgroundColor: Colors.grey,
+          child: const Icon(Icons.delete_outline_outlined),
+        ),
+        const SizedBox(
+          height: 10,
+        ),
+        FloatingActionButton(
+          onPressed: () {
+            _autoScroll = true;
+            _scrollDown();
+          },
+          backgroundColor: Colors.grey,
+          child: const Icon(Icons.download_rounded),
+        )
+      ]),
     );
   }
 
