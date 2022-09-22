@@ -5,9 +5,11 @@
 **features:**
 * [x] add floating button to scroll down and copy stdout
 * [x] improve auto scroll behavior
+* [x] make timer count while process is still running
 
 **bug-fixes:**
 * [x] prevent app freeze by limiting console string length
+* [x] improve scroll behavior
 
 ## 0.00.002
 

@@ -30,12 +30,16 @@ class Tasks {
     if (data.containsKey("profiles")) {
       for (var prof in data["profiles"]) {
         if (prof.containsKey("name") && prof.containsKey("executable")) {
+          List<String> params = [];
+          if (prof.containsKey("params")) {
+            params = List<String>.from(prof['params']);
+          }
           List<String> setup = [];
           if (prof.containsKey("setup")) {
             setup = List<String>.from(prof['setup']);
           }
           profiles[prof["name"]] =
-              Profile(prof["name"], prof["executable"], setup);
+              Profile(prof["name"], prof["executable"], params, setup);
         }
       }
     }
@@ -57,11 +61,20 @@ class Task {
   bool autoScroll = true;
   DateTime? startTime;
   DateTime? stopTime;
+  String runtimeStr = "";
+
   Task(
       this.id, this.name, this.cmd, this.params, this.profile, this.workingDir);
   void start() {
     startTime = DateTime.now();
     stopTime = null;
+  }
+
+  void trimStdout(int maxTerminalChars, int maxTerminalCharsTrimThreshold) {
+    if (stout.length > maxTerminalChars + maxTerminalCharsTrimThreshold) {
+      print("cleanup: ${stout.length}");
+      stout = stout.substring(stout.length - maxTerminalChars, stout.length);
+    }
   }
 
   void finished() {
@@ -77,12 +90,13 @@ class Task {
     return "-";
   }
 
-  String getRunntime() {
-    if (startTime != null && stopTime != null) {
-      var diff = stopTime?.difference(startTime ?? DateTime.now());
-      if (diff != null) {
-        return diff.toString().split('.').first;
-      }
+  String getRuntime() {
+    if (startTime != null) {
+      var diff =
+          (stopTime ?? DateTime.now()).difference(startTime ?? DateTime.now());
+      //if (diff != null) {
+      return diff.toString().split('.').first;
+      //}
     }
     return "-";
   }
@@ -97,6 +111,7 @@ enum TaskState { idle, running, finished, aborted, failed }
 class Profile {
   final String name;
   final String executable;
+  final List<String> params;
   final List<String> setup;
-  Profile(this.name, this.executable, this.setup);
+  Profile(this.name, this.executable, this.params, this.setup);
 }

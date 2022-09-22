@@ -42,6 +42,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  Timer? _timer;
   final ScrollController _scrollController = ScrollController();
   final MultiSplitViewController _splitViewController =
       MultiSplitViewController(areas: Area.weights([0.4, 0.6]));
@@ -54,10 +55,48 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _loadFile();
+    _loadJsonFile();
+    startTimer();
   }
 
-  Future<void> _loadFile() async {
+  @override
+  void dispose() {
+    if (_timer != null) {
+      _timer?.cancel();
+      _timer = null;
+    }
+    for (var task in tasks.tasks) {
+      try {
+        _killTask(task);
+      } catch (e) {}
+    }
+    super.dispose();
+  }
+
+  void startTimer() {
+    if (_timer != null) {
+      _timer?.cancel();
+      _timer = null;
+    }
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (Timer timer) {
+        updateTasksTimes();
+      },
+    );
+  }
+
+  Future<void> updateTasksTimes() async {
+    setState(() {
+      for (var task in tasks.tasks) {
+        if (task.state == TaskState.running) {
+          task.runtimeStr = task.getRuntime();
+        }
+      }
+    });
+  }
+
+  Future<void> _loadJsonFile() async {
     final file = File('setup.json');
     final content = await file.readAsString();
     final instance = jsonDecode(content);
@@ -70,11 +109,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _scrollDown() async {
-    _scrollController.jumpTo(_scrollController.position.maxScrollExtent
-        //,
-        //duration: const Duration(milliseconds: 500),
-        //curve: Curves.ease,
-        );
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent
+          //,
+          //duration: const Duration(milliseconds: 500),
+          //curve: Curves.ease,
+          );
+    });
   }
 
   Future<void> _runTask(Task task) async {
@@ -91,8 +132,11 @@ class _MyHomePageState extends State<MyHomePage> {
           return;
         }
         var profile = tasks.profiles[task.profile];
-        task.process = await Process.start("\"${profile?.executable}\"", [],
+        task.process = await Process.start(
+            "\"${profile?.executable}\"", profile?.params ?? [],
             workingDirectory: task.workingDir, mode: ProcessStartMode.normal);
+        //task.process = await Process.start("wsl.exe", ["-d", "Ubuntu"],
+        //    workingDirectory: task.workingDir, mode: ProcessStartMode.normal);
         for (var setupRow in profile?.setup ?? []) {
           task.process?.stdin.writeln(setupRow);
         }
@@ -155,22 +199,12 @@ class _MyHomePageState extends State<MyHomePage> {
     if (task.id == selectedTask.id) {
       setState(() {
         task.stout += out;
-        if (task.stout.length >
-            maxTerminalChars + maxTerminalCharsTrimThreshold) {
-          print("cleanup: ${task.stout.length}");
-          task.stout = task.stout.substring(
-              task.stout.length - maxTerminalChars, task.stout.length);
-        }
+        task.trimStdout(maxTerminalChars, maxTerminalCharsTrimThreshold);
       });
       if (_autoScroll) _scrollDown();
     } else {
       task.stout += out;
-      if (task.stout.length >
-          maxTerminalChars + maxTerminalCharsTrimThreshold) {
-        print("cleanup2");
-        task.stout = task.stout
-            .substring(task.stout.length - maxTerminalChars, task.stout.length);
-      }
+      task.trimStdout(maxTerminalChars, maxTerminalCharsTrimThreshold);
     }
   }
 
@@ -227,15 +261,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
     Widget right = NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
-          print('inside the onNotification');
+          // print('inside the onNotification');
           if (_scrollController.position.userScrollDirection ==
               ScrollDirection.reverse) {
-            print('scrolled down');
+            //print('scrolled down');
             _autoScroll = false;
             //the setState function
           } else if (_scrollController.position.userScrollDirection ==
               ScrollDirection.forward) {
-            print('scrolled up');
+            //print('scrolled up');
             _autoScroll = false;
             //setState function
           }
@@ -281,6 +315,25 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
+      drawer: Drawer(
+          child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColorDark,
+              ),
+              child: const Text("menu")),
+          ListTile(
+            leading: const Icon(Icons.refresh),
+            title: const Text('reload setup.json'),
+            onTap: () {
+              Navigator.pop(context);
+              _loadJsonFile();
+            },
+          ),
+        ],
+      )),
       body: theme,
       floatingActionButton:
           Column(mainAxisAlignment: MainAxisAlignment.end, children: [
@@ -337,8 +390,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         icon: const Icon(Icons.play_circle),
                         onPressed: () => _runTask(task))),
             (task.state == TaskState.running)
-                ? const SizedBox(
-                    height: 30, width: 30, child: CircularProgressIndicator())
+                ? const Icon(Icons.running_with_errors, color: Colors.blue)
+                //SizedBox(
+                //    height: 30, width: 30, child: CircularProgressIndicator())
                 : (task.state == TaskState.finished)
                     ? const Icon(Icons.done,
                         color: Color.fromARGB(255, 0, 153, 8))
@@ -354,7 +408,7 @@ class _MyHomePageState extends State<MyHomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text("started at: ${task.getStartTime()}"),
-          Text("it took: ${task.getRunntime()}"),
+          Text("it took: ${task.runtimeStr}"),
         ],
       ),
       onTap: () => _selectTask(task),
