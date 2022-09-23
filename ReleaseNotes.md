@@ -6,6 +6,7 @@
 * [x] add floating button to scroll down and copy stdout
 * [x] improve auto scroll behavior
 * [x] make timer count while process is still running
+* [x] add menu with option to reload setup.json
 
 **bug-fixes:**
 * [x] prevent app freeze by limiting console string length

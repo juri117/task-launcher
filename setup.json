@@ -6,6 +6,17 @@
             "setup": [
                 "export LANG=C.UTF-8"
             ]
+        },
+        {
+            "name": "wsl-ardupilot",
+            "executable": "wsl.exe",
+            "params": [
+                "-d",
+                "Ubuntu"
+            ],
+            "setup": [
+                "cd ~"
+            ]
         }
     ],
     "tasks": [
