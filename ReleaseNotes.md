@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.00.004
+
+**features:**
+* [x] upgrade build-toolchain
+* [x] show version number in app-bar
+
 ## 0.00.003
 
 **features:**

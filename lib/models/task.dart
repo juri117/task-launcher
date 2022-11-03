@@ -72,7 +72,6 @@ class Task {
 
   void trimStdout(int maxTerminalChars, int maxTerminalCharsTrimThreshold) {
     if (stout.length > maxTerminalChars + maxTerminalCharsTrimThreshold) {
-      print("cleanup: ${stout.length}");
       stout = stout.substring(stout.length - maxTerminalChars, stout.length);
     }
   }

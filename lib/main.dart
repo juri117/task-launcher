@@ -11,6 +11,8 @@ import 'package:multi_split_view/multi_split_view.dart';
 import 'package:rich_text_view/rich_text_view.dart';
 import 'package:task_launcher/models/task.dart';
 
+const String versionName = "0.00.004";
+
 const int maxTerminalChars = 50000;
 const int maxTerminalCharsTrimThreshold = 5000;
 
@@ -149,8 +151,12 @@ class _MyHomePageState extends State<MyHomePage> {
       final Completer<int?> completer = Completer<int?>();
 
       task.process?.stdout.listen((event) {
-        var test = const Utf8Decoder().convert(event);
-        _appendOutputToTask(task, test);
+        try {
+          var test = const Utf8Decoder().convert(event);
+          _appendOutputToTask(task, test);
+        } catch (e) {
+          print("exception in process listen stdout: $e");
+        }
       }, onDone: () async {
         completer.complete(await task.process?.exitCode);
       }, onError: (error, stack) {
@@ -160,8 +166,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
       task.process?.stderr.listen(
           (event) {
-            var test = const Utf8Decoder().convert(event);
-            _appendOutputToTask(task, test);
+            try {
+              var test = const Utf8Decoder().convert(event);
+              _appendOutputToTask(task, test);
+            } catch (e) {
+              print("exception in process listen stderr: $e");
+            }
           },
           onDone: () async {},
           onError: (error, stack) {
@@ -313,7 +323,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(widget.title),
+          const SizedBox(
+            width: 10,
+          ),
+          Text(
+            "v: $versionName",
+            style: TextStyle(
+                fontSize: 10,
+                color:
+                    Theme.of(context).colorScheme.onPrimary.withOpacity(0.5)),
+          )
+        ]),
       ),
       drawer: Drawer(
           child: ListView(
