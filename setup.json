@@ -8,7 +8,7 @@
             ]
         },
         {
-            "name": "wsl-ardupilot",
+            "name": "wsl",
             "executable": "wsl.exe",
             "params": [
                 "-d",
