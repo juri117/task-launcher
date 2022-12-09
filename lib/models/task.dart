@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:task_launcher/log_view.dart';
+
 class Tasks {
   final List<Task> tasks;
   final Map<String, Profile> profiles;
@@ -55,24 +57,30 @@ class Task {
   final String profile;
   final String? workingDir;
   TaskState state = TaskState.idle;
-  String stout = "";
+  // String stout = "";
+  List<LogMessage> output = [];
   Process? process;
-  double scrollOffset = -1.0;
-  bool autoScroll = true;
+  //double scrollOffset = -1.0;
+  //bool autoScroll = true;
   DateTime? startTime;
   DateTime? stopTime;
   String runtimeStr = "";
 
   Task(
       this.id, this.name, this.cmd, this.params, this.profile, this.workingDir);
+
   void start() {
     startTime = DateTime.now();
     stopTime = null;
   }
 
+  void addOutput(String txt, {String level = "I"}) {
+    output.add(LogMessage(level, "", txt));
+  }
+
   void trimStdout(int maxTerminalChars, int maxTerminalCharsTrimThreshold) {
-    if (stout.length > maxTerminalChars + maxTerminalCharsTrimThreshold) {
-      stout = stout.substring(stout.length - maxTerminalChars, stout.length);
+    if (output.length > maxTerminalChars + maxTerminalCharsTrimThreshold) {
+      output.removeAt(0);
     }
   }
 

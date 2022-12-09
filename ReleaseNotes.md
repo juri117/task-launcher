@@ -1,10 +1,14 @@
 # Release Notes
 
+
+
 ## 0.00.004
 
 **features:**
 * [x] upgrade build-toolchain
+* [x] rework log view (in hope of getting rid of some random crashes)
 * [x] show version number in app-bar
+* [x] add custom launch icon
 
 ## 0.00.003
 
