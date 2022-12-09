@@ -21,7 +21,7 @@ mkdir release/task-launcher-win-$VERSION
 cp build/windows/runner/Release/* release/task-launcher-win-$VERSION/ -r
 cp README.md release/task-launcher-win-$VERSION/
 cp ReleaseNotes.md release/task-launcher-win-$VERSION/
-cp setup.json release/task-launcher-win-$VERSION/setup_sample.json
+cp setup.json release/task-launcher-win-$VERSION/setup-sample.json
 cp scripts/data/run.sh release/task-launcher-win-$VERSION/
 cp scripts/data/run.bat release/task-launcher-win-$VERSION/
 

@@ -21,11 +21,6 @@
     ],
     "tasks": [
         {
-            "name": "remote pilot app",
-            "workingDirectory": "../../tmp/pilotPc/diaven-pilot",
-            "cmd": "../../tmp/pilotPc/diaven-pilot/labfly_pilot.exe"
-        },
-        {
             "name": "test ipconfig",
             "cmd": "ipconfig"
         },
