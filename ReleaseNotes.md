@@ -1,6 +1,9 @@
 # Release Notes
 
+## 0.00.005
 
+**bug-fixes:**
+* [x] fix bug in log list trim
 
 ## 0.00.004
 

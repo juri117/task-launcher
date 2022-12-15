@@ -1,4 +1,4 @@
-# task_launcher
+# flutter task launcher
 
 A graphical task launcher written in flutter, setup via json file, support for different terminal apps, should run on windows, linux, macos (tested on windows).
 

@@ -9,10 +9,10 @@ import 'package:multi_split_view/multi_split_view.dart';
 import 'package:task_launcher/log_view.dart';
 import 'package:task_launcher/models/task.dart';
 
-const String versionName = "0.00.004";
+const String versionName = "0.00.005";
 
-const int maxTerminalChars = 50000;
-const int maxTerminalCharsTrimThreshold = 5000;
+const int maxTerminalChars = 500;
+const int maxTerminalCharsTrimThreshold = 20;
 
 void main() {
   runApp(const MyApp());

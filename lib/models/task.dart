@@ -80,7 +80,7 @@ class Task {
 
   void trimStdout(int maxTerminalChars, int maxTerminalCharsTrimThreshold) {
     if (output.length > maxTerminalChars + maxTerminalCharsTrimThreshold) {
-      output.removeAt(0);
+      output.removeRange(0, output.length - maxTerminalChars);
     }
   }
 
