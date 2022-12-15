@@ -2,6 +2,9 @@
 
 ## 0.00.005
 
+**features:**
+* [x] allow environment variable setup
+
 **bug-fixes:**
 * [x] fix bug in log list trim
 * [x] make logs selectable

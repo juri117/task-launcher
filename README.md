@@ -84,6 +84,17 @@ place a `setup.json` file next to the executable with e.g.
             ]
         },
         {
+            "name": "python test env",
+            "cmd": "python",
+            "workingDirectory": "./scripts",
+            "params": [
+                "test_env.py"
+            ],
+            "env": {
+                "TEST_VAR": "test ok"
+            }
+        },
+        {
             "name": "release",
             "profile": "git-bash",
             "cmd": "./scripts/release.sh"

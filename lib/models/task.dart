@@ -14,8 +14,12 @@ class Tasks {
     int id = 0;
     for (var task in taskList) {
       List<String> params = [];
+      Map<String, String> env = {};
       if (task.containsKey("params")) {
         params = List<String>.from(task['params']);
+      }
+      if (task.containsKey("env")) {
+        env = Map<String, String>.from(task['env']);
       }
       String profile = "";
       if (task.containsKey("profile")) {
@@ -25,7 +29,8 @@ class Tasks {
       if (task.containsKey("workingDirectory")) {
         workingDir = task['workingDirectory'];
       }
-      out.add(Task(id, task['name'], task['cmd'], params, profile, workingDir));
+      out.add(Task(
+          id, task['name'], task['cmd'], params, env, profile, workingDir));
       id++;
     }
     Map<String, Profile> profiles = {};
@@ -54,6 +59,7 @@ class Task {
   final String name;
   final String cmd;
   final List<String> params;
+  final Map<String, String> env;
   final String profile;
   final String? workingDir;
   TaskState state = TaskState.idle;
@@ -66,8 +72,8 @@ class Task {
   DateTime? stopTime;
   String runtimeStr = "";
 
-  Task(
-      this.id, this.name, this.cmd, this.params, this.profile, this.workingDir);
+  Task(this.id, this.name, this.cmd, this.params, this.env, this.profile,
+      this.workingDir);
 
   void start() {
     startTime = DateTime.now();

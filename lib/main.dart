@@ -47,7 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
       MultiSplitViewController(areas: Area.weights([0.4, 0.6]));
 
   Tasks tasks = Tasks([], {});
-  Task selectedTask = Task(0, "loading...", ".", [], "", null);
+  Task selectedTask = Task(0, "loading...", ".", [], {}, "", null);
 
   List<LogMessage> logMessages = [];
 
@@ -128,7 +128,9 @@ class _MyHomePageState extends State<MyHomePage> {
         var profile = tasks.profiles[task.profile];
         task.process = await Process.start(
             "\"${profile?.executable}\"", profile?.params ?? [],
-            workingDirectory: task.workingDir, mode: ProcessStartMode.normal);
+            workingDirectory: task.workingDir,
+            environment: task.env,
+            mode: ProcessStartMode.normal);
         for (var setupRow in profile?.setup ?? []) {
           task.process?.stdin.writeln(setupRow);
         }
@@ -136,7 +138,9 @@ class _MyHomePageState extends State<MyHomePage> {
             .writeln("${task.cmd} ${task.params.join(" ")} && exit");
       } else {
         task.process = await Process.start(task.cmd, task.params,
-            workingDirectory: task.workingDir, mode: ProcessStartMode.normal);
+            workingDirectory: task.workingDir,
+            environment: task.env,
+            mode: ProcessStartMode.normal);
       }
       print("${task.name} started");
       final Completer<int?> completer = Completer<int?>();
