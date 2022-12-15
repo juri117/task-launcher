@@ -42,7 +42,7 @@ class LogViewStat extends State<LogView> {
   Widget build(BuildContext context) {
     List<Widget> logLines = [];
     for (var element in widget.logMessages) {
-      logLines.add(Text(element.toString(),
+      logLines.add(SelectableText(element.toString(),
           style:
               TextStyle(fontSize: widget.fontSize, color: element.getColor())));
     }

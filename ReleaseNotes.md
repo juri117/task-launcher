@@ -4,6 +4,7 @@
 
 **bug-fixes:**
 * [x] fix bug in log list trim
+* [x] make logs selectable
 
 ## 0.00.004
 
