@@ -11,8 +11,8 @@ import 'package:task_launcher/models/task.dart';
 
 const String versionName = "0.00.005";
 
-const int maxTerminalChars = 500;
-const int maxTerminalCharsTrimThreshold = 20;
+int maxTerminalChars = 500;
+int maxTerminalCharsTrimThreshold = 20;
 
 void main() {
   runApp(const MyApp());
@@ -100,9 +100,13 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _loadJsonFile() async {
     final file = File('setup.json');
     final content = await file.readAsString();
-    final instance = jsonDecode(content);
+    final jsonData = jsonDecode(content);
+    if (jsonData.containsKey("maxLogLines")) {
+      maxTerminalChars = jsonData["maxLogLines"];
+      maxTerminalCharsTrimThreshold = (maxTerminalChars * 0.05).round();
+    }
     setState(() {
-      tasks = Tasks.fromJson(instance);
+      tasks = Tasks.fromJson(jsonData);
       if (tasks.tasks.isNotEmpty) {
         selectedTask = tasks.tasks[0];
       }

@@ -1,4 +1,5 @@
 {
+    "maxLogLines": 300,
     "profiles": [
         {
             "name": "git-bash",

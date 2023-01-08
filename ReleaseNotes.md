@@ -1,9 +1,10 @@
 # Release Notes
 
-## 0.00.005
+## 0.00.005 ...
 
 **features:**
 * [x] allow environment variable setup
+* [x] add config value `maxLogLines` for max. number of log lines
 
 **bug-fixes:**
 * [x] fix bug in log list trim
