@@ -1,9 +1,20 @@
 # Release Notes
 
+## 0.00.005 ...
+
+**features:**
+* [x] allow environment variable setup
+* [x] add config value `maxLogLines` for max. number of log lines
+
+**bug-fixes:**
+* [x] fix bug in log list trim
+* [x] make logs selectable
+
 ## 0.00.004
 
 **features:**
 * [x] upgrade build-toolchain
+* [x] rework log view (in hope of getting rid of some random crashes)
 * [x] show version number in app-bar
 * [x] add custom launch icon
 

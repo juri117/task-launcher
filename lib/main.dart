@@ -5,16 +5,14 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:multi_split_view/multi_split_view.dart';
-import 'package:rich_text_view/rich_text_view.dart';
+import 'package:task_launcher/log_view.dart';
 import 'package:task_launcher/models/task.dart';
 
-const String versionName = "0.00.004";
+const String versionName = "0.00.005";
 
-const int maxTerminalChars = 50000;
-const int maxTerminalCharsTrimThreshold = 5000;
+int maxTerminalChars = 500;
+int maxTerminalCharsTrimThreshold = 20;
 
 void main() {
   runApp(const MyApp());
@@ -45,14 +43,13 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Timer? _timer;
-  final ScrollController _scrollController = ScrollController();
   final MultiSplitViewController _splitViewController =
       MultiSplitViewController(areas: Area.weights([0.4, 0.6]));
 
   Tasks tasks = Tasks([], {});
-  Task selectedTask = Task(0, "loading...", ".", [], "", null);
+  Task selectedTask = Task(0, "loading...", ".", [], {}, "", null);
 
-  bool _autoScroll = true;
+  List<LogMessage> logMessages = [];
 
   @override
   void initState() {
@@ -70,8 +67,9 @@ class _MyHomePageState extends State<MyHomePage> {
     for (var task in tasks.tasks) {
       try {
         _killTask(task);
-        // ignore: empty_catches
-      } catch (e) {}
+      } catch (e) {
+        print("${task.name}: failed to kill");
+      }
     }
     super.dispose();
   }
@@ -84,12 +82,12 @@ class _MyHomePageState extends State<MyHomePage> {
     _timer = Timer.periodic(
       const Duration(seconds: 1),
       (Timer timer) {
-        updateTasksTimes();
+        updateTaskTimes();
       },
     );
   }
 
-  Future<void> updateTasksTimes() async {
+  Future<void> updateTaskTimes() async {
     setState(() {
       for (var task in tasks.tasks) {
         if (task.state == TaskState.running) {
@@ -102,22 +100,16 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _loadJsonFile() async {
     final file = File('setup.json');
     final content = await file.readAsString();
-    final instance = jsonDecode(content);
+    final jsonData = jsonDecode(content);
+    if (jsonData.containsKey("maxLogLines")) {
+      maxTerminalChars = jsonData["maxLogLines"];
+      maxTerminalCharsTrimThreshold = (maxTerminalChars * 0.05).round();
+    }
     setState(() {
-      tasks = Tasks.fromJson(instance);
+      tasks = Tasks.fromJson(jsonData);
       if (tasks.tasks.isNotEmpty) {
         selectedTask = tasks.tasks[0];
       }
-    });
-  }
-
-  Future<void> _scrollDown() async {
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _scrollController.jumpTo(_scrollController.position.maxScrollExtent
-          //,
-          //duration: const Duration(milliseconds: 500),
-          //curve: Curves.ease,
-          );
     });
   }
 
@@ -126,20 +118,23 @@ class _MyHomePageState extends State<MyHomePage> {
     task.start();
     _taskChangeState(task, TaskState.running);
     _appendOutputToTask(task,
-        "\n*${'=' * 40}*\n*running command: ${task.cmd} ${task.params.join(" ")}*\n*${'-' * 40}*\n");
+        "\n*${'=' * 40}*\n*running command: ${task.cmd} ${task.params.join(" ")}*\n*${'-' * 40}*\n",
+        level: "D");
+    print("${task.name} start...");
     try {
       if (task.profile.isNotEmpty) {
         if (!tasks.profiles.containsKey(task.profile)) {
           _appendOutputToTask(
-              task, "*ERROR: profile ${task.profile} is not defined*\n");
+              task, "*ERROR: profile ${task.profile} is not defined*\n",
+              level: "E");
           return;
         }
         var profile = tasks.profiles[task.profile];
         task.process = await Process.start(
             "\"${profile?.executable}\"", profile?.params ?? [],
-            workingDirectory: task.workingDir, mode: ProcessStartMode.normal);
-        //task.process = await Process.start("wsl.exe", ["-d", "Ubuntu"],
-        //    workingDirectory: task.workingDir, mode: ProcessStartMode.normal);
+            workingDirectory: task.workingDir,
+            environment: task.env,
+            mode: ProcessStartMode.normal);
         for (var setupRow in profile?.setup ?? []) {
           task.process?.stdin.writeln(setupRow);
         }
@@ -147,59 +142,67 @@ class _MyHomePageState extends State<MyHomePage> {
             .writeln("${task.cmd} ${task.params.join(" ")} && exit");
       } else {
         task.process = await Process.start(task.cmd, task.params,
-            workingDirectory: task.workingDir, mode: ProcessStartMode.normal);
+            workingDirectory: task.workingDir,
+            environment: task.env,
+            mode: ProcessStartMode.normal);
       }
+      print("${task.name} started");
       final Completer<int?> completer = Completer<int?>();
 
       task.process?.stdout.listen((event) {
         try {
           var test = const Utf8Decoder().convert(event);
-          _appendOutputToTask(task, test);
+          _appendOutputToTask(task, test, level: "I");
         } catch (e) {
-          // ignore: avoid_print
-          print("exception in process listen stdout: $e");
+          print("${task.name} exception in process listen stdout: $e");
         }
       }, onDone: () async {
         completer.complete(await task.process?.exitCode);
       }, onError: (error, stack) {
         //print("error: $error, $stack");
-        _appendOutputToTask(task, "error: $error");
+        _appendOutputToTask(task, "error: $error", level: "E");
       }, cancelOnError: false);
 
-      task.process?.stderr.listen(
-          (event) {
-            try {
-              var test = const Utf8Decoder().convert(event);
-              _appendOutputToTask(task, test);
-            } catch (e) {
-              // ignore: avoid_print
-              print("exception in process listen stderr: $e");
-            }
-          },
-          onDone: () async {},
-          onError: (error, stack) {
-            //print("stderr error: $error, $stack");
-            _appendOutputToTask(task, "error: $error");
-          },
-          cancelOnError: false);
-
+      task.process?.stderr.listen((event) {
+        print("${task.name} event -> $event");
+        try {
+          var test = const Utf8Decoder().convert(event);
+          _appendOutputToTask(task, test, level: "I");
+        } catch (e) {
+          print("${task.name} exception in process listen stderr: $e");
+        }
+      }, onDone: () async {
+        print("${task.name} onDone");
+      }, onError: (error, stack) {
+        print("${task.name} onError stderr error: $error, $stack");
+        _appendOutputToTask(task, "error: $error", level: "E");
+      }, cancelOnError: false);
+      print("${task.name} listener added");
       final int? exitCode = await completer.future;
-      _appendOutputToTask(task, "*exit code: $exitCode*\n");
+      print("${task.name} completed $exitCode");
+      _appendOutputToTask(task, "*exit code: $exitCode*\n", level: "D");
       if (task.state != TaskState.aborted) {
         if (exitCode == null) {
+          print('${task.name} failed null');
           _taskChangeState(task, TaskState.failed);
         } else if (exitCode != 0) {
+          print('${task.name} failed $exitCode');
           _taskChangeState(task, TaskState.failed);
         } else {
+          print('${task.name} finished $exitCode');
           _taskChangeState(task, TaskState.finished);
         }
       }
     } catch (e) {
+      print('${task.name} exception $e');
       _taskChangeState(task, TaskState.failed);
-      _appendOutputToTask(task, "*failed to launch the task, reason:*\n");
-      _appendOutputToTask(task, "$e\n");
+      _appendOutputToTask(task, "*failed to launch the task, reason:*\n",
+          level: "E");
+      _appendOutputToTask(task, "$e\n", level: "E");
     }
+    print('${task.name} finish...');
     task.finished();
+    print('${task.name} finished');
   }
 
   void _taskChangeState(Task task, TaskState newState) {
@@ -208,16 +211,13 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _appendOutputToTask(Task task, String out) {
+  void _appendOutputToTask(Task task, String out, {String level = "I"}) {
+    task.addOutput(out.trim(), level: level);
+    task.trimStdout(maxTerminalChars, maxTerminalCharsTrimThreshold);
     if (task.id == selectedTask.id) {
       setState(() {
-        task.stout += out;
-        task.trimStdout(maxTerminalChars, maxTerminalCharsTrimThreshold);
+        logMessages = task.output;
       });
-      if (_autoScroll) _scrollDown();
-    } else {
-      task.stout += out;
-      task.trimStdout(maxTerminalChars, maxTerminalCharsTrimThreshold);
     }
   }
 
@@ -227,85 +227,42 @@ class _MyHomePageState extends State<MyHomePage> {
       task.process?.kill(ProcessSignal.sigint);
       //Process.killPid(pid);
       _taskChangeState(task, TaskState.aborted);
-      _appendOutputToTask(
-          task, "\n*${'-' * 40}*\n*task was aborted by user*\n");
+      _appendOutputToTask(task, "\n*${'-' * 40}*\n*task was aborted by user*\n",
+          level: "W");
     }
     task.finished();
   }
 
   Future<void> _clearOutput(Task task) async {
+    task.output = [];
     setState(() {
-      task.stout = "";
+      logMessages = task.output;
     });
-    _scrollController.jumpTo(0.0);
-  }
-
-  void _copyToClipboard(Task task) async {
-    Clipboard.setData(ClipboardData(text: task.stout));
   }
 
   Future<void> _selectTask(Task task) async {
-    selectedTask.scrollOffset = _scrollController.offset;
-    selectedTask.autoScroll = _autoScroll;
+    // selectedTask.scrollOffset = 0;
     setState(() {
       selectedTask = task;
+      logMessages = task.output;
     });
-    _autoScroll = task.autoScroll;
-    if (task.autoScroll) {
-      _scrollDown();
-    } else {
-      if (task.scrollOffset < 0.0) {
-        _scrollController.jumpTo(0.0);
-      } else {
-        _scrollController.jumpTo(task.scrollOffset);
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     Widget left = ListView.builder(
       shrinkWrap: true,
-      //physics: const NeverScrollableScrollPhysics(),
       itemCount: tasks.tasks.length,
       itemBuilder: (context, index) {
         return _buildList(tasks.tasks[index]);
       },
     );
-    Widget right = NotificationListener<ScrollNotification>(
-        onNotification: (scrollNotification) {
-          // print('inside the onNotification');
-          if (_scrollController.position.userScrollDirection ==
-              ScrollDirection.reverse) {
-            //print('scrolled down');
-            _autoScroll = false;
-            //the setState function
-          } else if (_scrollController.position.userScrollDirection ==
-              ScrollDirection.forward) {
-            //print('scrolled up');
-            _autoScroll = false;
-            //setState function
-          }
-          return true;
-        },
-        child: Scrollbar(
-            controller: _scrollController,
-            thumbVisibility: true,
-            child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                controller: _scrollController,
-                child: RichTextView(
-                  style: const TextStyle(
-                      fontFamily: "myMono", color: Colors.black),
-                  selectable: true,
-                  text: selectedTask.stout,
-                  linkStyle: const TextStyle(color: Colors.blue),
-                  truncate: false,
-                  supportedTypes: [UrlParser(), BoldParser()],
-                  strutStyle: const StrutStyle(fontFamily: "myMono"),
-                  //boldStyle: const TextStyle(
-                  //    fontFamily: "myMono", color: Colors.purple),
-                ))));
+    Widget right = LogView(
+      logMessages,
+      onClear: () {
+        _clearOutput(selectedTask);
+      },
+    );
 
     MultiSplitView multiSplitView = MultiSplitView(
         controller: _splitViewController,
@@ -361,37 +318,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       )),
       body: theme,
-      floatingActionButton:
-          Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-        FloatingActionButton(
-          onPressed: () {
-            _copyToClipboard(selectedTask);
-          },
-          backgroundColor: Colors.grey,
-          child: const Icon(Icons.copy),
-        ),
-        const SizedBox(
-          height: 10,
-        ),
-        FloatingActionButton(
-          onPressed: () {
-            _clearOutput(selectedTask);
-          },
-          backgroundColor: Colors.grey,
-          child: const Icon(Icons.delete_outline_outlined),
-        ),
-        const SizedBox(
-          height: 10,
-        ),
-        FloatingActionButton(
-          onPressed: () {
-            _autoScroll = true;
-            _scrollDown();
-          },
-          backgroundColor: Colors.grey,
-          child: const Icon(Icons.download_rounded),
-        )
-      ]),
     );
   }
 

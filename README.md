@@ -1,7 +1,6 @@
-# task_launcher
+# flutter task launcher
 
-A graphical task launcher written in flutter, setup via json file, support for different terminal apps, should run on windows linux macos (tested on windos).
-
+A graphical task launcher written in flutter, setup via json file, support for different terminal apps, should run on windows, linux, macos (tested on windows).
 
 ![](docs/img/screenshot01.png)
 
@@ -16,6 +15,17 @@ place a `setup.json` file next to the executable with e.g.
             "executable": "C:/Program Files/Git/bin/bash.exe",
             "setup": [
                 "export LANG=C.UTF-8"
+            ]
+        },
+        {
+            "name": "wsl",
+            "executable": "wsl.exe",
+            "params": [
+                "-d",
+                "Ubuntu"
+            ],
+            "setup": [
+                "cd ~"
             ]
         }
     ],
@@ -47,7 +57,42 @@ place a `setup.json` file next to the executable with e.g.
         {
             "name": "sleep",
             "profile": "git-bash",
-            "cmd": "sleep 105"
+            "cmd": "sleep 20"
+        },
+        {
+            "name": "python test",
+            "cmd": "python",
+            "workingDirectory": "./scripts",
+            "params": [
+                "test.py"
+            ]
+        },
+        {
+            "name": "python test error",
+            "cmd": "python",
+            "workingDirectory": "./scripts",
+            "params": [
+                "test_error.py"
+            ]
+        },
+        {
+            "name": "python test big text",
+            "cmd": "python",
+            "workingDirectory": "./scripts",
+            "params": [
+                "big_text.py"
+            ]
+        },
+        {
+            "name": "python test env",
+            "cmd": "python",
+            "workingDirectory": "./scripts",
+            "params": [
+                "test_env.py"
+            ],
+            "env": {
+                "TEST_VAR": "test ok"
+            }
         },
         {
             "name": "release",

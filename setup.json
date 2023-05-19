@@ -1,4 +1,5 @@
 {
+    "maxLogLines": 300,
     "profiles": [
         {
             "name": "git-bash",
@@ -8,7 +9,7 @@
             ]
         },
         {
-            "name": "wsl-ardupilot",
+            "name": "wsl",
             "executable": "wsl.exe",
             "params": [
                 "-d",
@@ -47,7 +48,7 @@
         {
             "name": "sleep",
             "profile": "git-bash",
-            "cmd": "sleep 105"
+            "cmd": "sleep 20"
         },
         {
             "name": "python test",
@@ -72,6 +73,17 @@
             "params": [
                 "big_text.py"
             ]
+        },
+        {
+            "name": "python test env",
+            "cmd": "python",
+            "workingDirectory": "./scripts",
+            "params": [
+                "test_env.py"
+            ],
+            "env": {
+                "TEST_VAR": "test ok"
+            }
         },
         {
             "name": "release",

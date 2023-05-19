@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:task_launcher/log_view.dart';
+
 class Tasks {
   final List<Task> tasks;
   final Map<String, Profile> profiles;
@@ -12,8 +14,12 @@ class Tasks {
     int id = 0;
     for (var task in taskList) {
       List<String> params = [];
+      Map<String, String> env = {};
       if (task.containsKey("params")) {
         params = List<String>.from(task['params']);
+      }
+      if (task.containsKey("env")) {
+        env = Map<String, String>.from(task['env']);
       }
       String profile = "";
       if (task.containsKey("profile")) {
@@ -23,7 +29,8 @@ class Tasks {
       if (task.containsKey("workingDirectory")) {
         workingDir = task['workingDirectory'];
       }
-      out.add(Task(id, task['name'], task['cmd'], params, profile, workingDir));
+      out.add(Task(
+          id, task['name'], task['cmd'], params, env, profile, workingDir));
       id++;
     }
     Map<String, Profile> profiles = {};
@@ -52,27 +59,34 @@ class Task {
   final String name;
   final String cmd;
   final List<String> params;
+  final Map<String, String> env;
   final String profile;
   final String? workingDir;
   TaskState state = TaskState.idle;
-  String stout = "";
+  // String stout = "";
+  List<LogMessage> output = [];
   Process? process;
-  double scrollOffset = -1.0;
-  bool autoScroll = true;
+  //double scrollOffset = -1.0;
+  //bool autoScroll = true;
   DateTime? startTime;
   DateTime? stopTime;
   String runtimeStr = "";
 
-  Task(
-      this.id, this.name, this.cmd, this.params, this.profile, this.workingDir);
+  Task(this.id, this.name, this.cmd, this.params, this.env, this.profile,
+      this.workingDir);
+
   void start() {
     startTime = DateTime.now();
     stopTime = null;
   }
 
+  void addOutput(String txt, {String level = "I"}) {
+    output.add(LogMessage(level, "", txt));
+  }
+
   void trimStdout(int maxTerminalChars, int maxTerminalCharsTrimThreshold) {
-    if (stout.length > maxTerminalChars + maxTerminalCharsTrimThreshold) {
-      stout = stout.substring(stout.length - maxTerminalChars, stout.length);
+    if (output.length > maxTerminalChars + maxTerminalCharsTrimThreshold) {
+      output.removeRange(0, output.length - maxTerminalChars);
     }
   }
 
