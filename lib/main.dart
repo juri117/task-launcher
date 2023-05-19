@@ -70,6 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
     for (var task in tasks.tasks) {
       try {
         _killTask(task);
+        // ignore: empty_catches
       } catch (e) {}
     }
     super.dispose();
@@ -155,6 +156,7 @@ class _MyHomePageState extends State<MyHomePage> {
           var test = const Utf8Decoder().convert(event);
           _appendOutputToTask(task, test);
         } catch (e) {
+          // ignore: avoid_print
           print("exception in process listen stdout: $e");
         }
       }, onDone: () async {
@@ -170,6 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
               var test = const Utf8Decoder().convert(event);
               _appendOutputToTask(task, test);
             } catch (e) {
+              // ignore: avoid_print
               print("exception in process listen stderr: $e");
             }
           },
@@ -298,9 +301,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   text: selectedTask.stout,
                   linkStyle: const TextStyle(color: Colors.blue),
                   truncate: false,
-                  supportedTypes: const [ParsedType.URL, ParsedType.BOLD],
-                  boldStyle: const TextStyle(
-                      fontFamily: "myMono", color: Colors.purple),
+                  supportedTypes: [UrlParser(), BoldParser()],
+                  strutStyle: const StrutStyle(fontFamily: "myMono"),
+                  //boldStyle: const TextStyle(
+                  //    fontFamily: "myMono", color: Colors.purple),
                 ))));
 
     MultiSplitView multiSplitView = MultiSplitView(
@@ -435,7 +439,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       onTap: () => _selectTask(task),
       tileColor: task.id == selectedTask.id
-          ? Theme.of(context).backgroundColor
+          ? Theme.of(context).colorScheme.background
           : Theme.of(context).canvasColor,
     );
   }

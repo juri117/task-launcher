@@ -12,4 +12,4 @@ set CUR_MS=%time:~9,2%
 set SUBFILENAME=%CUR_YYYY%-%CUR_MM%-%CUR_DD%_%CUR_HH%-%CUR_NN%-%CUR_SS%
 
 mkdir logs
-task_launcher.exe 1 >> ".\logs\main_stout.txt" 2>>&1
+start task_launcher.exe 1 >> ".\logs\main_stout.txt" 2>>&1

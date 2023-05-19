@@ -5,6 +5,7 @@
 **features:**
 * [x] upgrade build-toolchain
 * [x] show version number in app-bar
+* [x] add custom launch icon
 
 ## 0.00.003
 
