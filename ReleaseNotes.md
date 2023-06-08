@@ -9,6 +9,7 @@
 **bug-fixes:**
 * [x] fix bug in log list trim
 * [x] make logs selectable
+* [x] kill tasks on windows close did not work
 
 ## 0.00.004
 

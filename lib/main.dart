@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:task_launcher/log_view.dart';
 import 'package:task_launcher/models/task.dart';
+import 'package:window_manager/window_manager.dart';
 
 const String versionName = "0.00.005";
 
@@ -41,7 +42,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WindowListener {
   Timer? _timer;
   final MultiSplitViewController _splitViewController =
       MultiSplitViewController(areas: Area.weights([0.4, 0.6]));
@@ -54,12 +55,29 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    windowManager.addListener(this);
     _loadJsonFile();
     startTimer();
   }
 
   @override
   void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  //@override
+  //void onWindowEvent(String eventName) {
+  //  print('[WindowManager] onWindowEvent: $eventName');
+  //}
+
+  @override
+  void onWindowClose() {
+    //print("win close");
+    cleanupOnCLose();
+  }
+
+  void cleanupOnCLose() {
     if (_timer != null) {
       _timer?.cancel();
       _timer = null;
@@ -71,7 +89,6 @@ class _MyHomePageState extends State<MyHomePage> {
         print("${task.name}: failed to kill");
       }
     }
-    super.dispose();
   }
 
   void startTimer() {
@@ -120,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _appendOutputToTask(task,
         "\n*${'=' * 40}*\n*running command: ${task.cmd} ${task.params.join(" ")}*\n*${'-' * 40}*\n",
         level: "D");
-    print("${task.name} start...");
+    //print("${task.name} start...");
     try {
       if (task.profile.isNotEmpty) {
         if (!tasks.profiles.containsKey(task.profile)) {
@@ -177,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
         print("${task.name} onError stderr error: $error, $stack");
         _appendOutputToTask(task, "error: $error", level: "E");
       }, cancelOnError: false);
-      print("${task.name} listener added");
+      // print("${task.name} listener added");
       final int? exitCode = await completer.future;
       print("${task.name} completed $exitCode");
       _appendOutputToTask(task, "*exit code: $exitCode*\n", level: "D");
@@ -200,7 +217,6 @@ class _MyHomePageState extends State<MyHomePage> {
           level: "E");
       _appendOutputToTask(task, "$e\n", level: "E");
     }
-    print('${task.name} finish...');
     task.finished();
     print('${task.name} finished');
   }
@@ -221,7 +237,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  Future<void> _killTask(Task task) async {
+  void _killTask(Task task) {
     var pid = task.process?.pid;
     if (pid != null) {
       task.process?.kill(ProcessSignal.sigint);
