@@ -5,6 +5,7 @@
 **features:**
 * [x] allow environment variable setup
 * [x] add config value `maxLogLines` for max. number of log lines
+* [x] read version from pubspec.yaml
 
 **bug-fixes:**
 * [x] fix bug in log list trim

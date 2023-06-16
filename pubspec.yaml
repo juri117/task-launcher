@@ -38,6 +38,7 @@ dependencies:
   flutter_launcher_icons: ^0.13.1
   intl: ^0.18.0
   multi_split_view: ^2.1.0
+  package_info_plus: ^4.0.2
   rich_text_view: ^1.1.0
   window_manager: ^0.3.4
 

@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:flutter/material.dart';
 import 'package:multi_split_view/multi_split_view.dart';
@@ -10,12 +11,17 @@ import 'package:task_launcher/log_view.dart';
 import 'package:task_launcher/models/task.dart';
 import 'package:window_manager/window_manager.dart';
 
-const String versionName = "0.00.005";
+// const String versionName = "0.00.005";
+String versionName = "?.?.?"; // is read from pubspec.yaml
 
 int maxTerminalChars = 500;
 int maxTerminalCharsTrimThreshold = 20;
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  PackageInfo packageInfo = await PackageInfo.fromPlatform();
+  versionName = packageInfo.version;
+
   runApp(const MyApp());
 }
 
