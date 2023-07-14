@@ -1,6 +1,11 @@
 # Release Notes
 
-## 0.00.005 ...
+## 0.00.006 ...
+
+**features:**
+* [x] option to log task output
+
+## 0.00.005
 
 **features:**
 * [x] allow environment variable setup

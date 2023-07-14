@@ -29,8 +29,12 @@ class Tasks {
       if (task.containsKey("workingDirectory")) {
         workingDir = task['workingDirectory'];
       }
-      out.add(Task(
-          id, task['name'], task['cmd'], params, env, profile, workingDir));
+      bool logToFile = false;
+      if (task.containsKey("logToFile")) {
+        logToFile = task['logToFile'];
+      }
+      out.add(Task(id, task['name'], task['cmd'], params, env, profile,
+          workingDir, logToFile));
       id++;
     }
     Map<String, Profile> profiles = {};
@@ -62,6 +66,8 @@ class Task {
   final Map<String, String> env;
   final String profile;
   final String? workingDir;
+  final bool logToFile;
+
   TaskState state = TaskState.idle;
   // String stout = "";
   List<LogMessage> output = [];
@@ -73,7 +79,7 @@ class Task {
   String runtimeStr = "";
 
   Task(this.id, this.name, this.cmd, this.params, this.env, this.profile,
-      this.workingDir);
+      this.workingDir, this.logToFile);
 
   void start() {
     startTime = DateTime.now();

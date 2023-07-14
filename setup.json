@@ -54,6 +54,7 @@
             "name": "python test",
             "cmd": "python",
             "workingDirectory": "./scripts",
+            "logToFile": false,
             "params": [
                 "test.py"
             ]

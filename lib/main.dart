@@ -9,10 +9,12 @@ import 'package:flutter/material.dart';
 import 'package:multi_split_view/multi_split_view.dart';
 import 'package:task_launcher/log_view.dart';
 import 'package:task_launcher/models/task.dart';
+import 'package:task_launcher/logging/my_logger.dart';
 import 'package:window_manager/window_manager.dart';
 
-// const String versionName = "0.00.005";
 String versionName = "?.?.?"; // is read from pubspec.yaml
+
+const String myTag = "main";
 
 int maxTerminalChars = 500;
 int maxTerminalCharsTrimThreshold = 20;
@@ -21,6 +23,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   PackageInfo packageInfo = await PackageInfo.fromPlatform();
   versionName = packageInfo.version;
+
+  await MyLog().setup();
 
   runApp(const MyApp());
 }
@@ -54,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       MultiSplitViewController(areas: Area.weights([0.4, 0.6]));
 
   Tasks tasks = Tasks([], {});
-  Task selectedTask = Task(0, "loading...", ".", [], {}, "", null);
+  Task selectedTask = Task(0, "loading...", ".", [], {}, "", null, false);
 
   List<LogMessage> logMessages = [];
 
@@ -91,8 +95,8 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     for (var task in tasks.tasks) {
       try {
         _killTask(task);
-      } catch (e) {
-        print("${task.name}: failed to kill");
+      } catch (ex, s) {
+        MyLog().exception(myTag, "${task.name} failed to kill", ex, s);
       }
     }
   }
@@ -169,62 +173,69 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
             environment: task.env,
             mode: ProcessStartMode.normal);
       }
-      print("${task.name} started");
+      MyLog().info(myTag, "${task.name} started");
       final Completer<int?> completer = Completer<int?>();
 
       task.process?.stdout.listen((event) {
         try {
           var test = const Utf8Decoder().convert(event);
           _appendOutputToTask(task, test, level: "I");
-        } catch (e) {
-          print("${task.name} exception in process listen stdout: $e");
+        } catch (ex, s) {
+          MyLog().exception(
+              myTag, "${task.name} exception in process listen stdout", ex, s);
         }
       }, onDone: () async {
         completer.complete(await task.process?.exitCode);
-      }, onError: (error, stack) {
+      }, onError: (ex, s) {
         //print("error: $error, $stack");
-        _appendOutputToTask(task, "error: $error", level: "E");
+        // _appendOutputToTask(task, "error: $error", level: "E");
+        MyLog().exception(
+            myTag, "${task.name} exception in process listen stdout", ex, s);
       }, cancelOnError: false);
 
       task.process?.stderr.listen((event) {
-        print("${task.name} event -> $event");
+        //print("${task.name} event -> $event");
         try {
           var test = const Utf8Decoder().convert(event);
           _appendOutputToTask(task, test, level: "I");
-        } catch (e) {
-          print("${task.name} exception in process listen stderr: $e");
+        } catch (ex, s) {
+          // print("${task.name} exception in process listen stderr: $e");
+          MyLog().exception(
+              myTag, "${task.name} exception in process listen stderr", ex, s);
         }
       }, onDone: () async {
-        print("${task.name} onDone");
+        //print("${task.name} onDone");
       }, onError: (error, stack) {
-        print("${task.name} onError stderr error: $error, $stack");
+        //print("${task.name} onError stderr error: $error, $stack");
         _appendOutputToTask(task, "error: $error", level: "E");
       }, cancelOnError: false);
       // print("${task.name} listener added");
       final int? exitCode = await completer.future;
-      print("${task.name} completed $exitCode");
+      //print("${task.name} completed $exitCode");
       _appendOutputToTask(task, "*exit code: $exitCode*\n", level: "D");
       if (task.state != TaskState.aborted) {
         if (exitCode == null) {
-          print('${task.name} failed null');
+          //print('${task.name} failed null');
           _taskChangeState(task, TaskState.failed);
         } else if (exitCode != 0) {
-          print('${task.name} failed $exitCode');
+          //print('${task.name} failed $exitCode');
           _taskChangeState(task, TaskState.failed);
         } else {
-          print('${task.name} finished $exitCode');
+          //print('${task.name} finished $exitCode');
           _taskChangeState(task, TaskState.finished);
         }
       }
-    } catch (e) {
-      print('${task.name} exception $e');
+    } catch (ex, s) {
+      // print('${task.name} exception $e');
+      MyLog().exception(
+          myTag, "${task.name} exception in process listen stderr", ex, s);
       _taskChangeState(task, TaskState.failed);
       _appendOutputToTask(task, "*failed to launch the task, reason:*\n",
           level: "E");
-      _appendOutputToTask(task, "$e\n", level: "E");
+      _appendOutputToTask(task, "$ex\n", level: "E");
     }
     task.finished();
-    print('${task.name} finished');
+    // print('${task.name} finished');
   }
 
   void _taskChangeState(Task task, TaskState newState) {
@@ -234,6 +245,9 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   }
 
   void _appendOutputToTask(Task task, String out, {String level = "I"}) {
+    if (task.logToFile) {
+      MyLog().generic("task-${task.name}", out, level);
+    }
     task.addOutput(out.trim(), level: level);
     task.trimStdout(maxTerminalChars, maxTerminalCharsTrimThreshold);
     if (task.id == selectedTask.id) {

@@ -46,3 +46,4 @@ app.*.map.json
 # my stuff
 release
 tmp
+logs
