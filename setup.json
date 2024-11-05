@@ -22,6 +22,14 @@
     ],
     "tasks": [
         {
+            "name": "remote-pilot DEV",
+            "workingDirectory": "~/myRepos/labfly/fl_remote_pilot_app/",
+            "cmd": "~/development/flutter/bin/flutter",
+            "params": [
+                "run", "--release", "-d", "linux"
+            ]
+        },
+        {
             "name": "test ipconfig",
             "cmd": "ipconfig"
         },

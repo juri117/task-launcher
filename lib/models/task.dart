@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:io' as io;
+import 'package:path/path.dart' as path;
 
 import 'package:task_launcher/log_view.dart';
 
@@ -28,13 +30,22 @@ class Tasks {
       String? workingDir;
       if (task.containsKey("workingDirectory")) {
         workingDir = task['workingDirectory'];
+        if (workingDir!.contains("~/")) {
+          workingDir = workingDir.replaceAll(
+              "~/", "${path.absolute(io.Platform.environment['HOME']!)}/");
+        }
       }
       bool logToFile = false;
       if (task.containsKey("logToFile")) {
         logToFile = task['logToFile'];
       }
-      out.add(Task(id, task['name'], task['cmd'], params, env, profile,
-          workingDir, logToFile));
+      String cmd = task['cmd'];
+      if (cmd.contains("~/")) {
+        cmd = cmd.replaceAll(
+            "~/", "${path.absolute(io.Platform.environment['HOME']!)}/");
+      }
+      out.add(Task(
+          id, task['name'], cmd, params, env, profile, workingDir, logToFile));
       id++;
     }
     Map<String, Profile> profiles = {};

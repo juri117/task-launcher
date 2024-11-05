@@ -3,10 +3,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:flutter/material.dart';
-import 'package:multi_split_view/multi_split_view.dart';
 import 'package:task_launcher/log_view.dart';
 import 'package:task_launcher/models/task.dart';
 import 'package:task_launcher/logging/my_logger.dart';
@@ -36,9 +36,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Task Launcher',
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-      ),
+      theme: FlexThemeData.light(scheme: FlexScheme.shark),
       home: const MyHomePage(title: 'Task Launcher'),
     );
   }
@@ -54,8 +52,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> with WindowListener {
   Timer? _timer;
-  final MultiSplitViewController _splitViewController =
-      MultiSplitViewController(areas: Area.weights([0.4, 0.6]));
+  //final MultiSplitViewController _splitViewController =
+  //   MultiSplitViewController(); //areas: Area.weights([0.4, 0.6]));
 
   Tasks tasks = Tasks([], {});
   Task selectedTask = Task(0, "loading...", ".", [], {}, "", null, false);
@@ -65,6 +63,23 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   @override
   void initState() {
     super.initState();
+/*
+    Widget left = ListView.builder(
+      shrinkWrap: true,
+      itemCount: tasks.tasks.length,
+      itemBuilder: (context, index) {
+        return _buildList(tasks.tasks[index]);
+      },
+    );
+    Widget right = LogView(
+      logMessages,
+      onClear: () {
+        _clearOutput(selectedTask);
+      },
+    );
+    _splitViewController.addArea(Area(min: 300, size: 350, data: left));
+    _splitViewController.addArea(Area(min: 300, size: 500, data: right));
+*/
     windowManager.addListener(this);
     _loadJsonFile();
     startTimer();
@@ -290,7 +305,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       shrinkWrap: true,
       itemCount: tasks.tasks.length,
       itemBuilder: (context, index) {
-        return _buildList(tasks.tasks[index]);
+        return _buildList(tasks.tasks[index], context);
       },
     );
     Widget right = LogView(
@@ -300,9 +315,16 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       },
     );
 
+    /*
     MultiSplitView multiSplitView = MultiSplitView(
-        controller: _splitViewController,
-        children: [left, right],
+        //controller: _splitViewController,
+        initialAreas: [
+          Area(builder: (context, area) => left),
+          Area(builder: (context, area) => right)
+        ],
+        //builder: (BuildContext context, Area area) {
+        //  return area.data;
+        //},
         dividerBuilder:
             (axis, index, resizable, dragging, highlighted, themeData) {
           return Container(
@@ -317,47 +339,59 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     MultiSplitViewTheme theme = MultiSplitViewTheme(
         data: MultiSplitViewThemeData(dividerThickness: 24),
         child: multiSplitView);
+    */
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(widget.title),
-          const SizedBox(
-            width: 10,
-          ),
-          Text(
-            "v: $versionName",
-            style: TextStyle(
+        appBar: AppBar(
+          title: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(widget.title),
+            const SizedBox(
+              width: 10,
+            ),
+            Text(
+              "v: $versionName",
+              style: TextStyle(
                 fontSize: 10,
-                color:
-                    Theme.of(context).colorScheme.onPrimary.withOpacity(0.5)),
-          )
-        ]),
-      ),
-      drawer: Drawer(
-          child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColorDark,
               ),
-              child: const Text("menu")),
-          ListTile(
-            leading: const Icon(Icons.refresh),
-            title: const Text('reload setup.json'),
-            onTap: () {
-              Navigator.pop(context);
-              _loadJsonFile();
-            },
-          ),
-        ],
-      )),
-      body: theme,
-    );
+            )
+          ]),
+        ),
+        drawer: Drawer(
+            child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+                //decoration: BoxDecoration(
+                //  color: Theme.of(context).primaryColorDark,
+                //),
+                child: const Text("menu")),
+            ListTile(
+              leading: const Icon(Icons.refresh),
+              title: const Text('reload setup.json'),
+              onTap: () {
+                Navigator.pop(context);
+                _loadJsonFile();
+              },
+            ),
+          ],
+        )),
+        body: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(width: 350, child: left),
+            VerticalDivider(
+              width: 1,
+              thickness: 1,
+            ),
+            Expanded(child: right)
+          ],
+        )
+        //theme,
+        );
   }
 
-  Widget _buildList(Task task) {
+  Widget _buildList(Task task, BuildContext context) {
     return ListTile(
       leading: const Icon(Icons.terminal),
       title: Text(
@@ -365,8 +399,8 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
       trailing: SizedBox(
-          width: 120,
-          child: Row(children: [
+          width: 90,
+          child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
             SizedBox(
                 width: 60,
                 height: 60,
@@ -401,7 +435,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       ),
       onTap: () => _selectTask(task),
       tileColor: task.id == selectedTask.id
-          ? Theme.of(context).colorScheme.background
+          ? Theme.of(context).colorScheme.secondary
           : Theme.of(context).canvasColor,
     );
   }

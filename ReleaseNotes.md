@@ -4,6 +4,7 @@
 
 **features:**
 * [x] option to log task output
+* [x] update dependencies
 
 ## 0.00.005
 

@@ -71,7 +71,8 @@ class LogViewStat extends State<LogView> {
           child: Padding(
               padding: const EdgeInsets.all(5.0),
               child: Column(children: [
-                ElevatedButton(
+                FloatingActionButton(
+                  mini: true,
                   child: const Icon(Icons.copy),
                   onPressed: () {
                     Clipboard.setData(
@@ -81,7 +82,8 @@ class LogViewStat extends State<LogView> {
                 const SizedBox(
                   height: 5,
                 ),
-                ElevatedButton(
+                FloatingActionButton(
+                  mini: true,
                   child: const Icon(Icons.delete_outline_outlined),
                   onPressed: () {
                     if (widget.onClear != null) {
@@ -92,12 +94,11 @@ class LogViewStat extends State<LogView> {
                 const SizedBox(
                   height: 5,
                 ),
-                ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(
-                          _needsScroll
-                              ? Theme.of(context).colorScheme.secondary
-                              : Colors.grey)),
+                FloatingActionButton(
+                  mini: true,
+                  backgroundColor: _needsScroll
+                      ? Theme.of(context).colorScheme.secondary
+                      : Colors.grey,
                   child: const Icon(Icons.arrow_downward),
                   onPressed: () {
                     if (!mounted) return;
