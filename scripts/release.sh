@@ -43,6 +43,9 @@ cp ReleaseNotes.md release/$RELEASE_FOLDER/
 cp setup.json release/$RELEASE_FOLDER/setup-sample.json
 cp scripts/data/run.sh release/$RELEASE_FOLDER/
 cp scripts/data/run.bat release/$RELEASE_FOLDER/
+cp icon.png release/$RELEASE_FOLDER/
+
+echo "$VERSION" >> release/$RELEASE_FOLDER/version.txt
 
 echo "zip release files"
 cd release

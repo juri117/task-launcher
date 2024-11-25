@@ -6,6 +6,9 @@
 * [x] option to log task output
 * [x] update dependencies
 
+**bug-fixes:**
+* [x] fix linux app icon
+
 ## 0.00.005
 
 **features:**
