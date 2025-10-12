@@ -1,6 +1,8 @@
 # Release Notes
 
-## 0.00.006 ...
+
+
+## 1.0.00
 
 **features:**
 * [x] option to log task output

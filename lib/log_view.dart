@@ -23,7 +23,7 @@ class LogViewStat extends State<LogView> {
     super.initState();
   }
 
-  _scrollToEnd({bool force = false}) async {
+  void _scrollToEnd({bool force = false}) async {
     if (_needsScroll || force) {
       try {
         if (_scrollController.hasClients) {

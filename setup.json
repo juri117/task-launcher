@@ -87,6 +87,10 @@
             }
         },
         {
+            "name": "path var",
+            "cmd": "cargo"
+        },
+        {
             "name": "release",
             "profile": "git-bash",
             "cmd": "./scripts/release.sh"
