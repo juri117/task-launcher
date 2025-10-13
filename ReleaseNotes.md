@@ -1,6 +1,9 @@
 # Release Notes
 
+## 1.0.01
 
+**features:**
+* support for loading different json config as cmd-line parameter
 
 ## 1.0.00
 

@@ -18,7 +18,7 @@ case $(uname | tr '[:upper:]' '[:lower:]') in
     7z --help
     ;;
     *)
-    echo "unsupportet OS"
+    echo "unsupported OS"
     exit 1
     ;;
 esac

@@ -19,32 +19,43 @@ const String myTag = "main";
 int maxTerminalChars = 500;
 int maxTerminalCharsTrimThreshold = 20;
 
-void main() async {
+void main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
   PackageInfo packageInfo = await PackageInfo.fromPlatform();
   versionName = packageInfo.version;
 
   await MyLog().setup();
 
-  runApp(const MyApp());
+  // Parse command line arguments
+  String configFile = 'setup.json'; // default config file
+  for (String arg in arguments) {
+    if (arg.startsWith('-config=')) {
+      configFile = arg.substring(8); // Remove '-config=' prefix
+    }
+  }
+
+  runApp(MyApp(configFile: configFile));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String configFile;
+
+  const MyApp({super.key, required this.configFile});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Task Launcher',
       theme: FlexThemeData.light(scheme: FlexScheme.shark),
-      home: const MyHomePage(title: 'Task Launcher'),
+      home: MyHomePage(title: 'Task Launcher', configFile: configFile),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.configFile});
   final String title;
+  final String configFile;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -81,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     _splitViewController.addArea(Area(min: 300, size: 500, data: right));
 */
     windowManager.addListener(this);
-    _loadJsonFile();
+    _loadJsonFile(widget.configFile);
     startTimer();
   }
 
@@ -139,20 +150,30 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     });
   }
 
-  Future<void> _loadJsonFile() async {
-    final file = File('setup.json');
-    final content = await file.readAsString();
-    final jsonData = jsonDecode(content);
-    if (jsonData.containsKey("maxLogLines")) {
-      maxTerminalChars = jsonData["maxLogLines"];
-      maxTerminalCharsTrimThreshold = (maxTerminalChars * 0.05).round();
-    }
-    setState(() {
-      tasks = Tasks.fromJson(jsonData);
-      if (tasks.tasks.isNotEmpty) {
-        selectedTask = tasks.tasks[0];
+  Future<void> _loadJsonFile(String configFile) async {
+    try {
+      final file = File(configFile);
+      if (!await file.exists()) {
+        MyLog().error(myTag, "Config file '$configFile' does not exist");
+        return;
       }
-    });
+      final content = await file.readAsString();
+      final jsonData = jsonDecode(content);
+      if (jsonData.containsKey("maxLogLines")) {
+        maxTerminalChars = jsonData["maxLogLines"];
+        maxTerminalCharsTrimThreshold = (maxTerminalChars * 0.05).round();
+      }
+      setState(() {
+        tasks = Tasks.fromJson(jsonData);
+        if (tasks.tasks.isNotEmpty) {
+          selectedTask = tasks.tasks[0];
+        }
+      });
+      MyLog().info(myTag, "Loaded config from '$configFile'");
+    } catch (ex, s) {
+      MyLog()
+          .exception(myTag, "Failed to load config file '$configFile'", ex, s);
+    }
   }
 
   Future<void> _runTask(Task task) async {
@@ -367,10 +388,10 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
                 child: const Text("menu")),
             ListTile(
               leading: const Icon(Icons.refresh),
-              title: const Text('reload setup.json'),
+              title: Text('reload ${widget.configFile}'),
               onTap: () {
                 Navigator.pop(context);
-                _loadJsonFile();
+                _loadJsonFile(widget.configFile);
               },
             ),
           ],

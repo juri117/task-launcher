@@ -102,3 +102,6 @@ place a `setup.json` file next to the executable with e.g.
     ]
 }
 ```
+
+
+* to use a different config you can start this app with `task_launcher -config=my_config.json`
