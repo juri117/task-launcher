@@ -4,6 +4,7 @@
 
 **features:**
 * support for loading different json config as cmd-line parameter
+* support for communication with tasks, show text field when prompted for input by process
 
 ## 1.0.00
 

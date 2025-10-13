@@ -6,8 +6,14 @@ class LogView extends StatefulWidget {
   final List<LogMessage> logMessages;
   final VoidCallback? onClear;
   final double fontSize;
+  final bool canSendInput;
+  final Function(String)? onSendInput;
   const LogView(this.logMessages,
-      {super.key, this.fontSize = 14, this.onClear});
+      {super.key,
+      this.fontSize = 14,
+      this.onClear,
+      this.canSendInput = false,
+      this.onSendInput});
 
   @override
   LogViewStat createState() => LogViewStat();
@@ -15,12 +21,19 @@ class LogView extends StatefulWidget {
 
 class LogViewStat extends State<LogView> {
   final ScrollController _scrollController = ScrollController();
+  final TextEditingController _inputController = TextEditingController();
 
   bool _needsScroll = true;
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _inputController.dispose();
+    super.dispose();
   }
 
   void _scrollToEnd({bool force = false}) async {
@@ -38,6 +51,13 @@ class LogViewStat extends State<LogView> {
     }
   }
 
+  void _sendInput() {
+    if (_inputController.text.isNotEmpty && widget.onSendInput != null) {
+      widget.onSendInput!(_inputController.text);
+      _inputController.clear();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Widget> logLines = [];
@@ -48,68 +68,108 @@ class LogViewStat extends State<LogView> {
     }
     _scrollToEnd();
 
-    return Stack(children: [
-      Container(
-          alignment: Alignment.topLeft,
-          child: LayoutBuilder(builder: (context, constraint) {
-            return Scrollbar(
-                controller: _scrollController,
-                child: SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    controller: _scrollController,
-                    child: ConstrainedBox(
-                        constraints:
-                            BoxConstraints(minWidth: constraint.maxWidth),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: logLines,
-                        ))));
-          })),
-      Container(
-          alignment: Alignment.bottomRight,
-          child: Padding(
-              padding: const EdgeInsets.all(5.0),
-              child: Column(children: [
-                FloatingActionButton(
-                  mini: true,
-                  child: const Icon(Icons.copy),
-                  onPressed: () {
-                    Clipboard.setData(
-                        ClipboardData(text: widget.logMessages.join("\n")));
-                  },
+    return Column(
+      children: [
+        Expanded(
+          child: Stack(children: [
+            Container(
+                alignment: Alignment.topLeft,
+                child: LayoutBuilder(builder: (context, constraint) {
+                  return Scrollbar(
+                      controller: _scrollController,
+                      child: SingleChildScrollView(
+                          scrollDirection: Axis.vertical,
+                          controller: _scrollController,
+                          child: ConstrainedBox(
+                              constraints:
+                                  BoxConstraints(minWidth: constraint.maxWidth),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: logLines,
+                              ))));
+                })),
+            Container(
+                alignment: Alignment.bottomRight,
+                child: Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: Column(children: [
+                      FloatingActionButton(
+                        mini: true,
+                        child: const Icon(Icons.copy),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(
+                              text: widget.logMessages.join("\n")));
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      FloatingActionButton(
+                        mini: true,
+                        child: const Icon(Icons.delete_outline_outlined),
+                        onPressed: () {
+                          if (widget.onClear != null) {
+                            widget.onClear!();
+                          }
+                        },
+                      ),
+                      const SizedBox(
+                        height: 5,
+                      ),
+                      FloatingActionButton(
+                        mini: true,
+                        backgroundColor: _needsScroll
+                            ? Theme.of(context).colorScheme.secondary
+                            : Colors.grey,
+                        child: const Icon(Icons.arrow_downward),
+                        onPressed: () {
+                          if (!mounted) return;
+                          setState(() {
+                            _needsScroll = !_needsScroll;
+                          });
+                          _scrollToEnd();
+                        },
+                      ),
+                    ])))
+          ]),
+        ),
+        if (widget.canSendInput)
+          Container(
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: Theme.of(context).dividerColor,
+                  width: 1.0,
                 ),
-                const SizedBox(
-                  height: 5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _inputController,
+                    decoration: const InputDecoration(
+                      hintText: 'Type input for the running task...',
+                      border: OutlineInputBorder(),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                    ),
+                    onSubmitted: (_) => _sendInput(),
+                  ),
                 ),
-                FloatingActionButton(
-                  mini: true,
-                  child: const Icon(Icons.delete_outline_outlined),
-                  onPressed: () {
-                    if (widget.onClear != null) {
-                      widget.onClear!();
-                    }
-                  },
+                const SizedBox(width: 8.0),
+                IconButton(
+                  icon: const Icon(Icons.send),
+                  onPressed: _sendInput,
+                  tooltip: 'Send input to task',
                 ),
-                const SizedBox(
-                  height: 5,
-                ),
-                FloatingActionButton(
-                  mini: true,
-                  backgroundColor: _needsScroll
-                      ? Theme.of(context).colorScheme.secondary
-                      : Colors.grey,
-                  child: const Icon(Icons.arrow_downward),
-                  onPressed: () {
-                    if (!mounted) return;
-                    setState(() {
-                      _needsScroll = !_needsScroll;
-                    });
-                    _scrollToEnd();
-                  },
-                ),
-              ])))
-    ]);
+              ],
+            ),
+          ),
+      ],
+    );
   }
 }
 

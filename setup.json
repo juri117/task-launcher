@@ -22,14 +22,17 @@
     ],
     "tasks": [
         {
-            "name": "test ipconfig",
-            "cmd": "ipconfig"
+            "name": "test ip a",
+            "cmd": "ip",
+            "params": [
+                "a"
+            ]
         },
         {
             "name": "test ping",
             "cmd": "ping",
             "params": [
-                "192.168.0.0"
+                "1.1.1.1"
             ]
         },
         {
@@ -37,18 +40,16 @@
             "cmd": "ls"
         },
         {
-            "name": "test ls in git bash",
+            "name": "Win: test ls in git bash",
             "profile": "git-bash",
             "cmd": "ls"
         },
         {
-            "name": "test help",
-            "cmd": "help"
-        },
-        {
-            "name": "sleep",
-            "profile": "git-bash",
-            "cmd": "sleep 20"
+            "name": "sleep 20s",
+            "cmd": "sleep",
+            "params": [
+                "20"
+            ]
         },
         {
             "name": "python test",
@@ -87,8 +88,20 @@
             }
         },
         {
-            "name": "path var",
-            "cmd": "cargo"
+            "name": "interactive test py",
+            "cmd": "python",
+            "workingDirectory": "./scripts",
+            "params": [
+                "test_interactive.py"
+            ]
+        },
+        {
+            "name": "interactive test sh",
+            "cmd": "bash",
+            "workingDirectory": "./scripts",
+            "params": [
+                "test_input.sh"
+            ]
         },
         {
             "name": "release",

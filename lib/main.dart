@@ -320,6 +320,18 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     });
   }
 
+  void _sendInputToTask(Task task, String input) {
+    if (task.state == TaskState.running && task.process != null) {
+      try {
+        task.process!.stdin.writeln(input);
+        _appendOutputToTask(task, "> $input\n", level: "D");
+      } catch (ex, s) {
+        MyLog().exception(myTag, "${task.name} failed to send input", ex, s);
+        _appendOutputToTask(task, "*Failed to send input: $ex*\n", level: "E");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget left = ListView.builder(
@@ -333,6 +345,10 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       logMessages,
       onClear: () {
         _clearOutput(selectedTask);
+      },
+      canSendInput: selectedTask.state == TaskState.running,
+      onSendInput: (String input) {
+        _sendInputToTask(selectedTask, input);
       },
     );
 
