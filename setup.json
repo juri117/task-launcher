@@ -1,5 +1,6 @@
 {
     "maxLogLines": 300,
+    "useDarkTheme": false,
     "profiles": [
         {
             "name": "git-bash",
@@ -104,8 +105,12 @@
             ]
         },
         {
-            "name": "release",
+            "name": "WIN release",
             "profile": "git-bash",
+            "cmd": "./scripts/release.sh"
+        },
+        {
+            "name": "LINUX release",
             "cmd": "./scripts/release.sh"
         }
     ]

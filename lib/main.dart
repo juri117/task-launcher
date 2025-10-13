@@ -3,13 +3,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:flutter/material.dart';
 import 'package:task_launcher/log_view.dart';
 import 'package:task_launcher/models/task.dart';
 import 'package:task_launcher/logging/my_logger.dart';
+import 'package:task_launcher/theme.dart';
 import 'package:window_manager/window_manager.dart';
 
 String versionName = "?.?.?"; // is read from pubspec.yaml
@@ -18,6 +18,7 @@ const String myTag = "main";
 
 int maxTerminalChars = 500;
 int maxTerminalCharsTrimThreshold = 20;
+bool useDarkTheme = false;
 
 void main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,28 +35,63 @@ void main(List<String> arguments) async {
     }
   }
 
-  runApp(MyApp(configFile: configFile));
+  runApp(MyApp(configFile: configFile, useDarkTheme: useDarkTheme));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final String configFile;
+  final bool useDarkTheme;
 
-  const MyApp({super.key, required this.configFile});
+  const MyApp({super.key, required this.configFile, this.useDarkTheme = false});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool _isDarkTheme = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _isDarkTheme = widget.useDarkTheme;
+  }
+
+  void toggleTheme() {
+    setState(() {
+      _isDarkTheme = !_isDarkTheme;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Task Launcher',
-      theme: FlexThemeData.light(scheme: FlexScheme.shark),
-      home: MyHomePage(title: 'Task Launcher', configFile: configFile),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: _isDarkTheme ? ThemeMode.dark : ThemeMode.light,
+      home: MyHomePage(
+        title: 'Task Launcher',
+        configFile: widget.configFile,
+        onToggleTheme: toggleTheme,
+        isDarkTheme: _isDarkTheme,
+      ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title, required this.configFile});
+  const MyHomePage({
+    super.key,
+    required this.title,
+    required this.configFile,
+    required this.onToggleTheme,
+    required this.isDarkTheme,
+  });
   final String title;
   final String configFile;
+  final VoidCallback onToggleTheme;
+  final bool isDarkTheme;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -162,6 +198,9 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       if (jsonData.containsKey("maxLogLines")) {
         maxTerminalChars = jsonData["maxLogLines"];
         maxTerminalCharsTrimThreshold = (maxTerminalChars * 0.05).round();
+      }
+      if (jsonData.containsKey("useDarkTheme")) {
+        useDarkTheme = jsonData["useDarkTheme"];
       }
       setState(() {
         tasks = Tasks.fromJson(jsonData);
@@ -392,6 +431,16 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
               ),
             )
           ]),
+          actions: [
+            IconButton(
+              icon:
+                  Icon(widget.isDarkTheme ? Icons.light_mode : Icons.dark_mode),
+              onPressed: widget.onToggleTheme,
+              tooltip: widget.isDarkTheme
+                  ? 'Switch to light theme'
+                  : 'Switch to dark theme',
+            ),
+          ],
         ),
         drawer: Drawer(
             child: ListView(
@@ -429,51 +478,59 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   }
 
   Widget _buildList(Task task, BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.terminal),
-      title: Text(
-        task.name,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    final bool isSelected = task.id == selectedTask.id;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: AppTheme.getElevatedTileDecoration(context, isSelected),
+      child: ListTile(
+        dense: true,
+        leading: const Icon(Icons.terminal, size: 20),
+        title: Text(
+          task.name,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        trailing: SizedBox(
+            width: 80,
+            child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+              SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: (task.state == TaskState.running)
+                      ? IconButton(
+                          icon: const Icon(Icons.stop_circle, size: 20),
+                          onPressed: () => _killTask(task))
+                      : IconButton(
+                          icon: const Icon(Icons.play_circle, size: 20),
+                          onPressed: () => _runTask(task))),
+              (task.state == TaskState.running)
+                  ? Icon(Icons.running_with_errors,
+                      color: AppTheme.getRunningColor(context), size: 16)
+                  : (task.state == TaskState.finished)
+                      ? Icon(Icons.done,
+                          color: AppTheme.getFinishedColor(context), size: 16)
+                      : (task.state == TaskState.aborted)
+                          ? Icon(Icons.cancel_outlined,
+                              color: AppTheme.getAbortedColor(context),
+                              size: 16)
+                          : (task.state == TaskState.failed)
+                              ? Icon(Icons.error_outline,
+                                  color: AppTheme.getFailedColor(context),
+                                  size: 16)
+                              : const SizedBox(width: 16, height: 16)
+            ])),
+        subtitle: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("started at: ${task.getStartTime()}",
+                style: const TextStyle(fontSize: 11)),
+            Text("it took: ${task.runtimeStr}",
+                style: const TextStyle(fontSize: 11)),
+          ],
+        ),
+        onTap: () => _selectTask(task),
       ),
-      trailing: SizedBox(
-          width: 90,
-          child: Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-            SizedBox(
-                width: 60,
-                height: 60,
-                child: (task.state == TaskState.running)
-                    ? IconButton(
-                        icon: const Icon(Icons.stop_circle),
-                        onPressed: () => _killTask(task))
-                    : IconButton(
-                        icon: const Icon(Icons.play_circle),
-                        onPressed: () => _runTask(task))),
-            (task.state == TaskState.running)
-                ? const Icon(Icons.running_with_errors, color: Colors.blue)
-                //SizedBox(
-                //    height: 30, width: 30, child: CircularProgressIndicator())
-                : (task.state == TaskState.finished)
-                    ? const Icon(Icons.done,
-                        color: Color.fromARGB(255, 0, 153, 8))
-                    : (task.state == TaskState.aborted)
-                        ? const Icon(Icons.cancel_outlined)
-                        : (task.state == TaskState.failed)
-                            ? const Icon(Icons.error_outline,
-                                color: Color.fromARGB(255, 221, 15, 0))
-                            : const Text(" ")
-          ])),
-      subtitle: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("started at: ${task.getStartTime()}"),
-          Text("it took: ${task.runtimeStr}"),
-        ],
-      ),
-      onTap: () => _selectTask(task),
-      tileColor: task.id == selectedTask.id
-          ? Theme.of(context).colorScheme.secondary
-          : Theme.of(context).canvasColor,
     );
   }
 }

@@ -63,8 +63,8 @@ class LogViewStat extends State<LogView> {
     List<Widget> logLines = [];
     for (var element in widget.logMessages) {
       logLines.add(SelectableText(element.toString(),
-          style:
-              TextStyle(fontSize: widget.fontSize, color: element.getColor())));
+          style: TextStyle(
+              fontSize: widget.fontSize, color: element.getColor(context))));
     }
     _scrollToEnd();
 
@@ -191,10 +191,10 @@ class LogMessage {
     return DateFormat('dd.MM.yyyy – kk:mm:ss').format(ts);
   }
 
-  Color getColor() {
+  Color getColor(BuildContext context) {
     switch (level) {
       case "I":
-        return Colors.deepPurple;
+        return Theme.of(context).colorScheme.primary;
       case "W":
         return Colors.orange;
       case "E":
