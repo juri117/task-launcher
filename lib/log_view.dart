@@ -157,6 +157,7 @@ class LogViewStat extends State<LogView> {
                           EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                     ),
                     onSubmitted: (_) => _sendInput(),
+                    autofocus: true,
                   ),
                 ),
                 const SizedBox(width: 8.0),
