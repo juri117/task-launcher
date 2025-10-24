@@ -7,12 +7,10 @@ const Color _secondaryColor = Color.fromARGB(255, 101, 93, 209); // Blue
 const Color _secondaryVariant =
     Color.fromARGB(255, 102, 92, 241); // Darker blue
 const Color _surfaceColor = Color(0xFFF5F5F5); // Light gray
-const Color _backgroundColor = Color(0xFFFFFFFF); // White
 const Color _errorColor = Color(0xFFD32F2F); // Red
 const Color _onPrimaryColor = Color(0xFFFFFFFF); // White
 const Color _onSecondaryColor = Color(0xFFFFFFFF); // White
 const Color _onSurfaceColor = Color(0xFF212121); // Dark gray
-const Color _onBackgroundColor = Color(0xFF212121); // Dark gray
 const Color _onErrorColor = Color(0xFFFFFFFF); // White
 
 // Dark theme color constants
@@ -21,12 +19,10 @@ const Color _darkPrimaryVariant = Color(0xFF2E7D32); // Forest green
 const Color _darkSecondaryColor = Color(0xFF2196F3); // Light blue
 const Color _darkSecondaryVariant = Color(0xFF1976D2); // Blue
 const Color _darkSurfaceColor = Color(0xFF303030); // Dark gray
-const Color _darkBackgroundColor = Color(0xFF121212); // Very dark gray
 const Color _darkErrorColor = Color(0xFFCF6679); // Light red
 const Color _darkOnPrimaryColor = Color(0xFF000000); // Black
 const Color _darkOnSecondaryColor = Color(0xFF000000); // Black
 const Color _darkOnSurfaceColor = Color(0xFFFFFFFF); // White
-const Color _darkOnBackgroundColor = Color(0xFFFFFFFF); // White
 const Color _darkOnErrorColor = Color(0xFF000000); // Black
 
 // Task state colors
@@ -45,12 +41,10 @@ class AppTheme {
         secondary: _secondaryColor,
         secondaryContainer: _secondaryVariant,
         surface: _surfaceColor,
-        background: _backgroundColor,
         error: _errorColor,
         onPrimary: _onPrimaryColor,
         onSecondary: _onSecondaryColor,
         onSurface: _onSurfaceColor,
-        onBackground: _onBackgroundColor,
         onError: _onErrorColor,
       ),
       appBarTheme: const AppBarTheme(
@@ -88,12 +82,10 @@ class AppTheme {
         secondary: _darkSecondaryColor,
         secondaryContainer: _darkSecondaryVariant,
         surface: _darkSurfaceColor,
-        background: _darkBackgroundColor,
         error: _darkErrorColor,
         onPrimary: _darkOnPrimaryColor,
         onSecondary: _darkOnSecondaryColor,
         onSurface: _darkOnSurfaceColor,
-        onBackground: _darkOnBackgroundColor,
         onError: _darkOnErrorColor,
       ),
       appBarTheme: const AppBarTheme(

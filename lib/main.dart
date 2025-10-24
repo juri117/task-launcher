@@ -28,7 +28,7 @@ void main(List<String> arguments) async {
   await MyLog().setup();
 
   // Parse command line arguments
-  String configFile = 'setup.json'; // default config file
+  String configFile = 'config.json'; // default config file
   for (String arg in arguments) {
     if (arg.startsWith('-config=')) {
       configFile = arg.substring(8); // Remove '-config=' prefix
@@ -220,14 +220,14 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     task.start();
     _taskChangeState(task, TaskState.running);
     _appendOutputToTask(task,
-        "\n*${'=' * 40}*\n*running command: ${task.cmd} ${task.params.join(" ")}*\n*${'-' * 40}*\n",
+        "\n*${'=' * 40}*\n*running command: ${task.cmd} ${task.params.join(" ")}*\n*${'-' * 40}*",
         level: "D");
     //print("${task.name} start...");
     try {
       if (task.profile.isNotEmpty) {
         if (!tasks.profiles.containsKey(task.profile)) {
           _appendOutputToTask(
-              task, "*ERROR: profile ${task.profile} is not defined*\n",
+              task, "*ERROR: profile ${task.profile} is not defined*",
               level: "E");
           return;
         }
@@ -287,7 +287,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       // print("${task.name} listener added");
       final int? exitCode = await completer.future;
       //print("${task.name} completed $exitCode");
-      _appendOutputToTask(task, "*exit code: $exitCode*\n", level: "D");
+      _appendOutputToTask(task, "*exit code: $exitCode*", level: "D");
       if (task.state != TaskState.aborted) {
         if (exitCode == null) {
           //print('${task.name} failed null');
@@ -305,7 +305,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       MyLog().exception(
           myTag, "${task.name} exception in process listen stderr", ex, s);
       _taskChangeState(task, TaskState.failed);
-      _appendOutputToTask(task, "*failed to launch the task, reason:*\n",
+      _appendOutputToTask(task, "*failed to launch the task, reason:*",
           level: "E");
       _appendOutputToTask(task, "$ex\n", level: "E");
     }
@@ -323,7 +323,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     if (task.logToFile) {
       MyLog().generic("task-${task.name}", out, level);
     }
-    task.addOutput(out.trim(), level: level);
+    task.addOutput("${out.trim()}\n", level: level);
     task.trimStdout(maxTerminalChars, maxTerminalCharsTrimThreshold);
     if (task.id == selectedTask.id) {
       setState(() {
@@ -338,7 +338,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       task.process?.kill(ProcessSignal.sigint);
       //Process.killPid(pid);
       _taskChangeState(task, TaskState.aborted);
-      _appendOutputToTask(task, "\n*${'-' * 40}*\n*task was aborted by user*\n",
+      _appendOutputToTask(task, "\n*${'-' * 40}*\n*task was aborted by user*",
           level: "W");
     }
     task.finished();
@@ -366,7 +366,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         _appendOutputToTask(task, "> $input\n", level: "D");
       } catch (ex, s) {
         MyLog().exception(myTag, "${task.name} failed to send input", ex, s);
-        _appendOutputToTask(task, "*Failed to send input: $ex*\n", level: "E");
+        _appendOutputToTask(task, "*Failed to send input: $ex*", level: "E");
       }
     }
   }

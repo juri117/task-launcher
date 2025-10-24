@@ -1,5 +1,13 @@
 # Release Notes
 
+## 1.0.02
+
+**features:**
+* rename default config file: setup.json -> config.json
+
+**bug-fixes:**
+* fix log-file path on linux, use logs folder next to binary
+
 ## 1.0.01
 
 **features:**

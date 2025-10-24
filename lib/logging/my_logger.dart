@@ -36,7 +36,7 @@ class MyLog extends ChangeNotifier {
         .listen((_) {}, cancelOnError: false);
 
     Directory directory = await getApplicationDocumentsDirectory();
-    if (Platform.isWindows) {
+    if (Platform.isWindows || Platform.isLinux) {
       directory = Directory.current;
     }
     Directory(join(directory.path, "logs")).create();
@@ -58,7 +58,9 @@ class MyLog extends ChangeNotifier {
   Future<void> _log(LogMessage log) async {
     String logStr =
         "${log.level}: ${log.getDateTimeStr()}: ${log.tag}: ${log.msg}";
-    if (_out != null) _out?.write("$logStr\n");
+    if (_out != null) {
+      _out?.write("$logStr\n");
+    }
     // ignore: avoid_print
     print(logStr);
     addToHistory(log);

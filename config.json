@@ -53,6 +53,14 @@
             ]
         },
         {
+            "name": "log to file",
+            "cmd": "ip",
+            "params": [
+                "a"
+            ],
+            "logToFile": true
+        },
+        {
             "name": "python test",
             "cmd": "python",
             "workingDirectory": "./scripts",
