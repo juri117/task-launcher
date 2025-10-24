@@ -1,5 +1,6 @@
 {
     "maxLogLines": 300,
+    "title": "Samples",
     "theme": "deepPurple",
     "useDarkTheme": false,
     "profiles": [

@@ -4,6 +4,8 @@
 
 **features:**
 * rename default config file: setup.json -> config.json
+* theme can be set in config, options are here: https://docs.flexcolorscheme.com/all_themes
+* add option to set title in config (helps if you use multiple instances)
 
 **bug-fixes:**
 * fix log-file path on linux, use logs folder next to binary

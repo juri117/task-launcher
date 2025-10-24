@@ -135,6 +135,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   //final MultiSplitViewController _splitViewController =
   //   MultiSplitViewController(); //areas: Area.weights([0.4, 0.6]));
 
+  String _title = "";
   Tasks tasks = Tasks([], {});
   Task selectedTask = Task(0, "loading...", ".", [], {}, "", null, false);
 
@@ -238,6 +239,9 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       if (jsonData.containsKey("theme")) {
         themeName = jsonData["theme"];
         widget.onThemeChange(themeName);
+      }
+      if (jsonData.containsKey("title")) {
+        _title = jsonData["title"];
       }
       setState(() {
         tasks = Tasks.fromJson(jsonData);
@@ -428,32 +432,6 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       },
     );
 
-    /*
-    MultiSplitView multiSplitView = MultiSplitView(
-        //controller: _splitViewController,
-        initialAreas: [
-          Area(builder: (context, area) => left),
-          Area(builder: (context, area) => right)
-        ],
-        //builder: (BuildContext context, Area area) {
-        //  return area.data;
-        //},
-        dividerBuilder:
-            (axis, index, resizable, dragging, highlighted, themeData) {
-          return Container(
-            color: dragging ? Colors.grey[300] : Colors.grey[100],
-            child: Icon(
-              Icons.drag_indicator,
-              color: highlighted ? Colors.grey[600] : Colors.grey[400],
-            ),
-          );
-        });
-
-    MultiSplitViewTheme theme = MultiSplitViewTheme(
-        data: MultiSplitViewThemeData(dividerThickness: 24),
-        child: multiSplitView);
-    */
-
     return Scaffold(
         appBar: AppBar(
           title: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -466,7 +444,10 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
               style: TextStyle(
                 fontSize: 10,
               ),
-            )
+            ),
+            SizedBox(width: 30),
+            Text(_title,
+                style: TextStyle(color: Theme.of(context).colorScheme.primary)),
           ]),
           actions: [
             IconButton(
