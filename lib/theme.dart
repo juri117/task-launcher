@@ -1,3 +1,4 @@
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 
 // Theme color constants - change these to customize the appearance
@@ -164,4 +165,80 @@ class AppTheme {
       ],
     );
   }
+}
+
+/// Converts a string name to a FlexScheme enum value
+FlexScheme getFlexSchemeFromString(String name) {
+  // Map of string names to FlexScheme enum values
+  const Map<String, FlexScheme> schemeMap = {
+    'material': FlexScheme.material,
+    'materialHc': FlexScheme.materialHc,
+    'blue': FlexScheme.blue,
+    'indigo': FlexScheme.indigo,
+    'hippieBlue': FlexScheme.hippieBlue,
+    'aquaBlue': FlexScheme.aquaBlue,
+    'brandBlue': FlexScheme.brandBlue,
+    'deepBlue': FlexScheme.deepBlue,
+    'sakura': FlexScheme.sakura,
+    'mandyRed': FlexScheme.mandyRed,
+    'red': FlexScheme.red,
+    'redWine': FlexScheme.redWine,
+    'purpleBrown': FlexScheme.purpleBrown,
+    'green': FlexScheme.green,
+    'money': FlexScheme.money,
+    'jungle': FlexScheme.jungle,
+    'greyLaw': FlexScheme.greyLaw,
+    'wasabi': FlexScheme.wasabi,
+    'gold': FlexScheme.gold,
+    'mango': FlexScheme.mango,
+    'amber': FlexScheme.amber,
+    'vesuviusBurn': FlexScheme.vesuviusBurn,
+    'deepPurple': FlexScheme.deepPurple,
+    'ebonyClay': FlexScheme.ebonyClay,
+    'barossa': FlexScheme.barossa,
+    'shark': FlexScheme.shark,
+    'bigStone': FlexScheme.bigStone,
+    'damask': FlexScheme.damask,
+    'bahamaBlue': FlexScheme.bahamaBlue,
+    'mallardGreen': FlexScheme.mallardGreen,
+    'espresso': FlexScheme.espresso,
+    'outerSpace': FlexScheme.outerSpace,
+    'blueWhale': FlexScheme.blueWhale,
+    'sanJuanBlue': FlexScheme.sanJuanBlue,
+    'rosewood': FlexScheme.rosewood,
+    'blumineBlue': FlexScheme.blumineBlue,
+    'flutterDash': FlexScheme.flutterDash,
+    'materialBaseline': FlexScheme.materialBaseline,
+    'verdunHemlock': FlexScheme.verdunHemlock,
+    'dellGenoa': FlexScheme.dellGenoa,
+    'redM3': FlexScheme.redM3,
+    'pinkM3': FlexScheme.pinkM3,
+    'purpleM3': FlexScheme.purpleM3,
+    'indigoM3': FlexScheme.indigoM3,
+    'blueM3': FlexScheme.blueM3,
+    'cyanM3': FlexScheme.cyanM3,
+    'tealM3': FlexScheme.tealM3,
+    'greenM3': FlexScheme.greenM3,
+    'limeM3': FlexScheme.limeM3,
+    'yellowM3': FlexScheme.yellowM3,
+    'orangeM3': FlexScheme.orangeM3,
+    'deepOrangeM3': FlexScheme.deepOrangeM3,
+    'blackWhite': FlexScheme.blackWhite,
+    'greys': FlexScheme.greys,
+    'sepia': FlexScheme.sepia,
+    'shadBlue': FlexScheme.shadBlue,
+    'shadGray': FlexScheme.shadGray,
+    'shadGreen': FlexScheme.shadGreen,
+    'shadNeutral': FlexScheme.shadNeutral,
+    'shadOrange': FlexScheme.shadOrange,
+    'shadRed': FlexScheme.shadRed,
+    'shadRose': FlexScheme.shadRose,
+    'shadSlate': FlexScheme.shadSlate,
+    'shadStone': FlexScheme.shadStone,
+    'shadViolet': FlexScheme.shadViolet,
+    'shadYellow': FlexScheme.shadYellow,
+    'shadZinc': FlexScheme.shadZinc,
+    'custom': FlexScheme.custom,
+  };
+  return schemeMap[name] ?? FlexScheme.blue;
 }

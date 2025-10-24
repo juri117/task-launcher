@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ const String myTag = "main";
 int maxTerminalChars = 500;
 int maxTerminalCharsTrimThreshold = 20;
 bool useDarkTheme = false;
+String themeName = "blue";
 
 void main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +52,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool _isDarkTheme = false;
+  String _themeName = "blue";
 
   @override
   void initState() {
@@ -63,18 +66,46 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  void changeTheme(String themeName) {
+    setState(() {
+      _themeName = themeName;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    ThemeData theme = FlexColorScheme.light(scheme: FlexScheme.blue).toTheme;
+    ThemeData themeDark =
+        FlexColorScheme.light(scheme: FlexScheme.blue).toTheme;
+
+    // Get FlexScheme from string name
+
+    // Handle custom themes
+    switch (_themeName) {
+      case "my":
+        theme = AppTheme.lightTheme;
+        themeDark = AppTheme.darkTheme;
+        break;
+
+      default:
+        FlexScheme scheme = getFlexSchemeFromString(_themeName);
+        theme = FlexColorScheme.light(scheme: scheme).toTheme;
+        themeDark = FlexColorScheme.dark(scheme: scheme).toTheme;
+        break;
+    }
+
     return MaterialApp(
       title: 'Task Launcher',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: theme,
+      //theme: AppTheme.lightTheme,
+      darkTheme: themeDark,
       themeMode: _isDarkTheme ? ThemeMode.dark : ThemeMode.light,
       home: MyHomePage(
         title: 'Task Launcher',
         configFile: widget.configFile,
         onToggleTheme: toggleTheme,
         isDarkTheme: _isDarkTheme,
+        onThemeChange: changeTheme,
       ),
     );
   }
@@ -87,11 +118,13 @@ class MyHomePage extends StatefulWidget {
     required this.configFile,
     required this.onToggleTheme,
     required this.isDarkTheme,
+    required this.onThemeChange,
   });
   final String title;
   final String configFile;
   final VoidCallback onToggleTheme;
   final bool isDarkTheme;
+  final Function(String) onThemeChange;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -201,6 +234,10 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       }
       if (jsonData.containsKey("useDarkTheme")) {
         useDarkTheme = jsonData["useDarkTheme"];
+      }
+      if (jsonData.containsKey("theme")) {
+        themeName = jsonData["theme"];
+        widget.onThemeChange(themeName);
       }
       setState(() {
         tasks = Tasks.fromJson(jsonData);
