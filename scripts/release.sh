@@ -40,7 +40,7 @@ mkdir release/$RELEASE_FOLDER
 cp $RELEASE_PATH/* release/$RELEASE_FOLDER/ -r
 cp README.md release/$RELEASE_FOLDER/
 cp ReleaseNotes.md release/$RELEASE_FOLDER/
-cp setup.json release/$RELEASE_FOLDER/setup-sample.json
+cp config.json release/$RELEASE_FOLDER/config-sample.json
 cp scripts/data/run.sh release/$RELEASE_FOLDER/
 cp scripts/data/run.bat release/$RELEASE_FOLDER/
 cp icon.png release/$RELEASE_FOLDER/

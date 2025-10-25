@@ -447,7 +447,8 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
             ),
             SizedBox(width: 30),
             Text(_title,
-                style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.secondary)),
           ]),
           actions: [
             IconButton(
