@@ -7,10 +7,12 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:task_launcher/log_view.dart';
 import 'package:task_launcher/models/task.dart';
 import 'package:task_launcher/logging/my_logger.dart';
 import 'package:task_launcher/theme.dart';
+import 'package:task_launcher/widgets/runtime_display.dart';
 import 'package:window_manager/window_manager.dart';
 
 String versionName = "?.?.?"; // is read from pubspec.yaml
@@ -27,7 +29,14 @@ void main(List<String> arguments) async {
   PackageInfo packageInfo = await PackageInfo.fromPlatform();
   versionName = packageInfo.version;
 
-  await MyLog().setup();
+  Directory directory = await getApplicationDocumentsDirectory();
+  if (Platform.isWindows || Platform.isLinux) {
+    directory = Directory.current;
+  }
+  String appsPath = "${directory.path}/";
+  //Directory(join(directory.path, "logs")).create();
+
+  await MyLog().setup(appsPath);
 
   // Parse command line arguments
   String configFile = 'config.json'; // default config file
@@ -37,14 +46,19 @@ void main(List<String> arguments) async {
     }
   }
 
-  runApp(MyApp(configFile: configFile, useDarkTheme: useDarkTheme));
+  runApp(MyApp(
+      configFile: configFile, useDarkTheme: useDarkTheme, appsPath: appsPath));
 }
 
 class MyApp extends StatefulWidget {
   final String configFile;
   final bool useDarkTheme;
-
-  const MyApp({super.key, required this.configFile, this.useDarkTheme = false});
+  final String appsPath;
+  const MyApp(
+      {super.key,
+      required this.configFile,
+      this.useDarkTheme = false,
+      required this.appsPath});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -74,6 +88,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    print("build MyApp");
     ThemeData theme = FlexColorScheme.light(scheme: FlexScheme.blue).toTheme;
     ThemeData themeDark =
         FlexColorScheme.light(scheme: FlexScheme.blue).toTheme;
@@ -106,6 +121,7 @@ class _MyAppState extends State<MyApp> {
         onToggleTheme: toggleTheme,
         isDarkTheme: _isDarkTheme,
         onThemeChange: changeTheme,
+        appsPath: widget.appsPath,
       ),
     );
   }
@@ -119,19 +135,20 @@ class MyHomePage extends StatefulWidget {
     required this.onToggleTheme,
     required this.isDarkTheme,
     required this.onThemeChange,
+    required this.appsPath,
   });
   final String title;
   final String configFile;
   final VoidCallback onToggleTheme;
   final bool isDarkTheme;
   final Function(String) onThemeChange;
-
+  final String appsPath;
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> with WindowListener {
-  Timer? _timer;
+  //Timer? _timer;
   //final MultiSplitViewController _splitViewController =
   //   MultiSplitViewController(); //areas: Area.weights([0.4, 0.6]));
 
@@ -144,26 +161,9 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   @override
   void initState() {
     super.initState();
-/*
-    Widget left = ListView.builder(
-      shrinkWrap: true,
-      itemCount: tasks.tasks.length,
-      itemBuilder: (context, index) {
-        return _buildList(tasks.tasks[index]);
-      },
-    );
-    Widget right = LogView(
-      logMessages,
-      onClear: () {
-        _clearOutput(selectedTask);
-      },
-    );
-    _splitViewController.addArea(Area(min: 300, size: 350, data: left));
-    _splitViewController.addArea(Area(min: 300, size: 500, data: right));
-*/
     windowManager.addListener(this);
     _loadJsonFile(widget.configFile);
-    startTimer();
+    //startTimer();
   }
 
   @override
@@ -184,10 +184,10 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
   }
 
   void cleanupOnCLose() {
-    if (_timer != null) {
-      _timer?.cancel();
-      _timer = null;
-    }
+    //if (_timer != null) {
+    //  _timer?.cancel();
+    //  _timer = null;
+    //}
     for (var task in tasks.tasks) {
       try {
         _killTask(task);
@@ -196,7 +196,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       }
     }
   }
-
+/*
   void startTimer() {
     if (_timer != null) {
       _timer?.cancel();
@@ -209,6 +209,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
       },
     );
   }
+  */
 
   Future<void> updateTaskTimes() async {
     setState(() {
@@ -244,7 +245,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         _title = jsonData["title"];
       }
       setState(() {
-        tasks = Tasks.fromJson(jsonData);
+        tasks = Tasks.fromJson(jsonData, widget.appsPath);
         if (tasks.tasks.isNotEmpty) {
           selectedTask = tasks.tasks[0];
         }
@@ -284,7 +285,41 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         task.process?.stdin
             .writeln("${task.cmd} ${task.params.join(" ")} && exit");
       } else {
-        task.process = await Process.start(task.cmd, task.params,
+        // On Linux, wrap bash/sh scripts with 'script' command to create a PTY
+        // This allows interactive commands like 'sudo' to prompt for passwords
+        String actualCmd = task.cmd;
+        List<String> actualParams = List<String>.from(task.params);
+
+        if (Platform.isLinux &&
+            (task.cmd == 'bash' ||
+                task.cmd == 'sh' ||
+                task.cmd.endsWith('/bash') ||
+                task.cmd.endsWith('/sh'))) {
+          // Build the command string to execute within script
+          // Properly quote arguments that contain spaces
+          String scriptCommand = task.cmd;
+          if (actualParams.isNotEmpty) {
+            List<String> quotedParams = actualParams.map((param) {
+              // Quote if contains spaces (most common case needing quotes)
+              if (param.contains(' ')) {
+                return "'${param.replaceAll("'", "'\\''")}'";
+              }
+              return param;
+            }).toList();
+            scriptCommand = "$scriptCommand ${quotedParams.join(' ')}";
+          }
+
+          // Use script command to create a PTY
+          // -q: quiet mode (suppress script start/stop messages)
+          // -e: return exit code of child process
+          // -f: flush output after each write
+          // -c: execute command
+          // /dev/null: log file (we don't need it, we capture stdout/stderr)
+          actualCmd = 'script';
+          actualParams = ['-qefc', scriptCommand, '/dev/null'];
+        }
+
+        task.process = await Process.start(actualCmd, actualParams,
             workingDirectory: task.workingDir,
             environment: task.env,
             mode: ProcessStartMode.normal);
@@ -364,7 +399,24 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     if (task.logToFile) {
       MyLog().generic("task-${task.name}", out, level);
     }
-    task.addOutput("${out.trim()}\n", level: level);
+    // Keep ANSI codes for styled display
+    // Split by newlines and add each line as a separate log message
+    String trimmed = out.trim();
+    if (trimmed.isEmpty) return;
+    task.addOutput(trimmed, level: level);
+/*
+    List<String> lines = trimmed.split('\n');
+    for (int i = 0; i < lines.length; i++) {
+      String line = lines[i];
+      if (line.isNotEmpty || i == lines.length - 1) {
+        // Add newline to all lines except the last one (if it's empty)
+        if (i < lines.length - 1 || line.isNotEmpty) {
+          task.addOutput("$line\n", level: level);
+        }
+      }
+    }
+    */
+
     task.trimStdout(maxTerminalChars, maxTerminalCharsTrimThreshold);
     if (task.id == selectedTask.id) {
       setState(() {
@@ -414,6 +466,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
+    print("build MyHomePage");
     Widget left = ListView.builder(
       shrinkWrap: true,
       itemCount: tasks.tasks.length,
@@ -544,8 +597,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
           children: [
             Text("started at: ${task.getStartTime()}",
                 style: const TextStyle(fontSize: 11)),
-            Text("it took: ${task.runtimeStr}",
-                style: const TextStyle(fontSize: 11)),
+            RuntimeDisplay(task: task),
           ],
         ),
         onTap: () => _selectTask(task),

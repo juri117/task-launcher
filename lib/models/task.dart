@@ -9,7 +9,7 @@ class Tasks {
   final Map<String, Profile> profiles;
   Tasks(this.tasks, this.profiles);
 
-  factory Tasks.fromJson(Map<String, dynamic> data) {
+  factory Tasks.fromJson(Map<String, dynamic> data, String appsPath) {
     if (!data.containsKey("tasks")) return Tasks([], {});
     List<dynamic> taskList = data["tasks"];
     List<Task> out = [];
@@ -30,9 +30,12 @@ class Tasks {
       String? workingDir;
       if (task.containsKey("workingDirectory")) {
         workingDir = task['workingDirectory'];
-        if (workingDir!.contains("~/")) {
-          workingDir = workingDir.replaceAll(
+        if (workingDir!.startsWith("~/")) {
+          workingDir = workingDir.replaceFirst(
               "~/", "${path.absolute(io.Platform.environment['HOME']!)}/");
+        }
+        if (workingDir.startsWith("./")) {
+          workingDir = workingDir.replaceFirst("./", appsPath);
         }
       }
       bool logToFile = false;
@@ -40,9 +43,12 @@ class Tasks {
         logToFile = task['logToFile'];
       }
       String cmd = task['cmd'];
-      if (cmd.contains("~/")) {
-        cmd = cmd.replaceAll(
+      if (cmd.startsWith("~/")) {
+        cmd = cmd.replaceFirst(
             "~/", "${path.absolute(io.Platform.environment['HOME']!)}/");
+      }
+      if (cmd.startsWith("./")) {
+        cmd = cmd.replaceFirst("./", appsPath);
       }
       out.add(Task(
           id, task['name'], cmd, params, env, profile, workingDir, logToFile));

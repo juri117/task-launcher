@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 
 import 'package:task_launcher/logging/log_message.dart';
@@ -28,22 +27,19 @@ class MyLog extends ChangeNotifier {
 
   MyLog._internal();
 
-  Future<void> setup() async {
+  Future<void> setup(String appsPath) async {
     //print("setup LOG...");
 
     _workerQue.stream
         .asyncMap((future) async => await future)
         .listen((_) {}, cancelOnError: false);
 
-    Directory directory = await getApplicationDocumentsDirectory();
-    if (Platform.isWindows || Platform.isLinux) {
-      directory = Directory.current;
-    }
-    Directory(join(directory.path, "logs")).create();
+    // Create logs directory if it doesn't exist
+    await Directory(join(appsPath, "logs")).create();
 
     final DateFormat format = DateFormat('yyyy-MM-dd_HH-mm-ss');
     final String formatted = format.format(DateTime.now().toUtc());
-    String fullPath = join(directory.path, "logs/${formatted}_rp_log.txt");
+    String fullPath = join(appsPath, "logs/${formatted}_rp_log.txt");
     File logFile = File(fullPath);
     _out = logFile.openWrite();
   }

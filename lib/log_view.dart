@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:task_launcher/utils/ansi_parser.dart';
 
 class LogView extends StatefulWidget {
   final List<LogMessage> logMessages;
@@ -62,9 +63,17 @@ class LogViewStat extends State<LogView> {
   Widget build(BuildContext context) {
     List<Widget> logLines = [];
     for (var element in widget.logMessages) {
-      logLines.add(SelectableText(element.toString(),
-          style: TextStyle(
-              fontSize: widget.fontSize, color: element.getColor(context))));
+      // Parse ANSI codes and create styled text spans
+      List<TextSpan> spans = AnsiParser.parseAnsi(
+        element.toString(),
+        fontSize: widget.fontSize,
+        defaultColor: element.getColor(context),
+        fontFamily: 'Monospace',
+      );
+
+      logLines.add(SelectableText.rich(
+        TextSpan(children: spans),
+      ));
     }
     _scrollToEnd();
 
@@ -148,16 +157,32 @@ class LogViewStat extends State<LogView> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _inputController,
-                    decoration: const InputDecoration(
-                      hintText: 'Type input for the running task...',
-                      border: OutlineInputBorder(),
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                    ),
-                    onSubmitted: (_) => _sendInput(),
-                    autofocus: true,
+                  child: Builder(
+                    builder: (context) {
+                      // Check if last log message contains "password"
+                      bool isPasswordField = false;
+                      String hintText = 'Type input for the running task...';
+                      if (widget.logMessages.isNotEmpty) {
+                        String lastMessage =
+                            widget.logMessages.last.msg.toLowerCase();
+                        if (lastMessage.contains('password')) {
+                          isPasswordField = true;
+                          hintText = 'Enter password...';
+                        }
+                      }
+                      return TextField(
+                        controller: _inputController,
+                        obscureText: isPasswordField,
+                        decoration: InputDecoration(
+                          hintText: hintText,
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12.0, vertical: 8.0),
+                        ),
+                        onSubmitted: (_) => _sendInput(),
+                        autofocus: true,
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(width: 8.0),

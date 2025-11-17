@@ -25,6 +25,14 @@
     ],
     "tasks": [
         {
+            "name": "backup LOGS",
+            "cmd": "./scripts/update_scripts/env/bin/python3",
+            "workingDirectory": "./scripts/update_scripts",
+            "params": [
+                "sync_logs_from_sftp.py"
+            ]
+        },
+        {
             "name": "test ip a",
             "cmd": "ip",
             "params": [
@@ -112,6 +120,14 @@
             "workingDirectory": "./scripts",
             "params": [
                 "test_input.sh"
+            ]
+        },
+        {
+            "name": "test sudo",
+            "cmd": "bash",
+            "workingDirectory": "./scripts",
+            "params": [
+                "test_sudo.sh"
             ]
         },
         {

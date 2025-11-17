@@ -1,5 +1,14 @@
 # Release Notes
 
+## 1.0.03
+
+**features:**
+* replace paths starting with "./" with the abs path to this apps root folder
+* use monospace font for log output
+* allow sudo commands and pw input
+* display ANSI colored text
+* [ ] rework gui update logic (whole gui updated when log is appended)
+
 ## 1.0.02
 
 **features:**
