@@ -7,4 +7,13 @@ if [ "$confirmation" != "yes" ]; then
     exit 0
 fi
 
+echo "password (correct is: 123): "
+read -rs password
+
+if [ "$password" != "123" ]; then
+    echo "Invalid password"
+else
+    echo "Valid password"
+fi
+
 echo "Continuing with operation..."

@@ -6,9 +6,9 @@ class RuntimeDisplay extends StatefulWidget {
   final Task task;
 
   const RuntimeDisplay({
-    Key? key,
+    super.key,
     required this.task,
-  }) : super(key: key);
+  });
 
   @override
   State<RuntimeDisplay> createState() => _RuntimeDisplayState();
@@ -58,5 +58,3 @@ class _RuntimeDisplayState extends State<RuntimeDisplay> {
     );
   }
 }
-
-

@@ -88,7 +88,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    print("build MyApp");
+    //print("build MyApp");
     ThemeData theme = FlexColorScheme.light(scheme: FlexScheme.blue).toTheme;
     ThemeData themeDark =
         FlexColorScheme.light(scheme: FlexScheme.blue).toTheme;
@@ -452,11 +452,15 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
     });
   }
 
-  void _sendInputToTask(Task task, String input) {
+  void _sendInputToTask(Task task, String input, bool isPwRequest) {
     if (task.state == TaskState.running && task.process != null) {
       try {
         task.process!.stdin.writeln(input);
-        _appendOutputToTask(task, "> $input\n", level: "D");
+        if (isPwRequest) {
+          _appendOutputToTask(task, "> ***\n", level: "D");
+        } else {
+          _appendOutputToTask(task, "> $input\n", level: "D");
+        }
       } catch (ex, s) {
         MyLog().exception(myTag, "${task.name} failed to send input", ex, s);
         _appendOutputToTask(task, "*Failed to send input: $ex*", level: "E");
@@ -466,7 +470,7 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    print("build MyHomePage");
+    //print("build MyHomePage");
     Widget left = ListView.builder(
       shrinkWrap: true,
       itemCount: tasks.tasks.length,
@@ -480,8 +484,8 @@ class _MyHomePageState extends State<MyHomePage> with WindowListener {
         _clearOutput(selectedTask);
       },
       canSendInput: selectedTask.state == TaskState.running,
-      onSendInput: (String input) {
-        _sendInputToTask(selectedTask, input);
+      onSendInput: (String input, bool isPwRequest) {
+        _sendInputToTask(selectedTask, input, isPwRequest);
       },
     );
 

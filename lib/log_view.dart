@@ -8,7 +8,7 @@ class LogView extends StatefulWidget {
   final VoidCallback? onClear;
   final double fontSize;
   final bool canSendInput;
-  final Function(String)? onSendInput;
+  final Function(String, bool)? onSendInput;
   const LogView(this.logMessages,
       {super.key,
       this.fontSize = 14,
@@ -54,7 +54,7 @@ class LogViewStat extends State<LogView> {
 
   void _sendInput() {
     if (_inputController.text.isNotEmpty && widget.onSendInput != null) {
-      widget.onSendInput!(_inputController.text);
+      widget.onSendInput!(_inputController.text, _lastMsgWasPwRequest());
       _inputController.clear();
     }
   }
@@ -162,13 +162,9 @@ class LogViewStat extends State<LogView> {
                       // Check if last log message contains "password"
                       bool isPasswordField = false;
                       String hintText = 'Type input for the running task...';
-                      if (widget.logMessages.isNotEmpty) {
-                        String lastMessage =
-                            widget.logMessages.last.msg.toLowerCase();
-                        if (lastMessage.contains('password')) {
-                          isPasswordField = true;
-                          hintText = 'Enter password...';
-                        }
+                      if (_lastMsgWasPwRequest()) {
+                        isPasswordField = true;
+                        hintText = 'Enter password...';
                       }
                       return TextField(
                         controller: _inputController,
@@ -196,6 +192,12 @@ class LogViewStat extends State<LogView> {
           ),
       ],
     );
+  }
+
+  bool _lastMsgWasPwRequest() {
+    if (widget.logMessages.isEmpty) return false;
+    String lastMessage = widget.logMessages.last.msg.toLowerCase();
+    return lastMessage.contains('password');
   }
 }
 

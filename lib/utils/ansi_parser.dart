@@ -5,7 +5,7 @@ class AnsiParser {
   static List<TextSpan> parseAnsi(String text,
       {double fontSize = 14, Color? defaultColor, String? fontFamily}) {
     List<TextSpan> spans = [];
-    String currentText = '';
+    //String currentText = '';
     TextStyle currentStyle = TextStyle(
       fontSize: fontSize,
       color: defaultColor ?? Colors.black,
@@ -17,7 +17,7 @@ class AnsiParser {
     List<String> parts = text.split(ansiRegex);
     List<Match> matches = ansiRegex.allMatches(text).toList();
 
-    int partIndex = 0;
+    //int partIndex = 0;
     for (int i = 0; i < parts.length; i++) {
       // Add the text part
       if (parts[i].isNotEmpty) {
